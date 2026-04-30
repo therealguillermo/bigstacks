@@ -1,142 +1,805 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Investment Roguelike</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: monospace; background: #0f0f0f; color: #e0e0e0; padding: 20px; max-width: 700px; }
-  h1 { color: #00ff88; font-size: 1.1em; margin-bottom: 4px; }
-  .subtitle { color: #555; font-size: 0.8em; margin-bottom: 16px; }
+	<head>
+		<meta charset="UTF-8">
+			<title>Investment Roguelike</title>
+			<style>
+				* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  .hud { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-  .stat-box { background: #1a1a1a; border: 1px solid #333; padding: 10px 14px; border-radius: 4px; min-width: 110px; }
-  .stat-label { font-size: 0.68em; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-  .stat-value { font-size: 1.2em; color: #00ff88; margin-top: 2px; }
-  .stat-value.yellow { color: #ffcc00; }
+				body {
+				font-family: monospace;
+				background: #0f0f0f;
+				color: #e0e0e0;
+				display: flex;
+				height: 100vh;
+				overflow: hidden;
+				}
 
-  .section { background: #1a1a1a; border: 1px solid #333; border-radius: 4px; padding: 14px; margin-bottom: 14px; }
-  .section-title { font-size: 0.7em; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+				/* ── SIDEBAR ── */
+				#sidebar {
+				width: 180px;
+				min-width: 180px;
+				background: #111;
+				border-right: 1px solid #2a2a2a;
+				display: flex;
+				flex-direction: column;
+				padding: 20px 14px;
+				gap: 20px;
+				overflow-y: auto;
+				}
 
-  .investment-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #222; flex-wrap: wrap; gap: 8px; }
-  .investment-row:last-child { border-bottom: none; }
-  .inv-name { font-size: 0.9em; color: #ccc; min-width: 120px; }
-  .inv-price { font-size: 0.82em; color: #888; min-width: 90px; }
-  .inv-holding { font-size: 0.82em; color: #aaa; min-width: 80px; }
-  .inv-change { font-size: 0.78em; min-width: 65px; }
-  .pos { color: #00ff88; } .neg { color: #ff4444; }
+				#sidebar h1 { color: #00ff88; font-size: 0.95em; line-height: 1.4; }
 
-  .btn { background: #1f1f1f; border: 1px solid #444; color: #ccc; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-family: monospace; font-size: 0.82em; }
-  .btn:hover { border-color: #00ff88; color: #00ff88; }
-  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
-  .btn.primary { border-color: #00ff88; color: #00ff88; }
-  .btn.danger { border-color: #ff4444; color: #ff4444; }
-  .btn-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+				.side-stat { display: flex; flex-direction: column; gap: 3px; }
+				.side-label { font-size: 0.65em; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+				.side-value { font-size: 1.05em; color: #00ff88; }
+				.side-value.yellow { color: #ffcc00; }
+				.side-value.white  { color: #e0e0e0; }
 
-  .log { background: #0d0d0d; border: 1px solid #222; border-radius: 4px; padding: 10px; height: 120px; overflow-y: auto; font-size: 0.76em; line-height: 1.7; }
-  .log-entry { color: #666; }
-  .log-entry.good { color: #00cc66; }
-  .log-entry.bad { color: #ff6666; }
-  .log-entry.event { color: #ffcc00; }
-  .log-entry.info { color: #66aaff; }
+				.year-bar { height: 3px; background: #222; border-radius: 2px; margin-top: 4px; }
+				.year-fill { height: 100%; background: #00ff88; border-radius: 2px; transition: width 0.1s; }
+				.side-divider { border: none; border-top: 1px solid #1e1e1e; }
+				.side-actions { display: flex; flex-direction: column; gap: 6px; }
 
-  .amount-input { background: #111; border: 1px solid #444; color: #e0e0e0; padding: 5px 8px; border-radius: 3px; font-family: monospace; font-size: 0.82em; width: 80px; }
-  .year-bar { height: 3px; background: #222; border-radius: 2px; margin-bottom: 18px; }
-  .year-fill { height: 100%; background: #00ff88; border-radius: 2px; transition: width 0.3s; }
-</style>
-</head>
-<body>
+				/* ── MAIN ── */
+				#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
-<h1>📈 INVESTMENT ROGUELIKE</h1>
-<div class="subtitle">Year <span id="year-display">1</span> of 30</div>
-<div class="year-bar"><div class="year-fill" id="year-fill" style="width:3%"></div></div>
+				/* ── TOP NAV ── */
+				#topnav { display: flex; border-bottom: 1px solid #2a2a2a; background: #111; flex-shrink: 0; }
+				.nav-tab {
+				padding: 12px 20px;
+				font-family: monospace;
+				font-size: 0.82em;
+				color: #555;
+				cursor: pointer;
+				border: none;
+				border-bottom: 2px solid transparent;
+				background: none;
+				transition: color 0.15s, border-color 0.15s;
+				white-space: nowrap;
+				}
+				.nav-tab:hover { color: #aaa; }
+				.nav-tab.active { color: #00ff88; border-bottom-color: #00ff88; }
 
-<div class="hud">
-  <div class="stat-box"><div class="stat-label">Cash</div><div class="stat-value" id="cash-display"></div></div>
-  <div class="stat-box"><div class="stat-label">Portfolio</div><div class="stat-value yellow" id="portfolio-display"></div></div>
-  <div class="stat-box"><div class="stat-label">Net Worth</div><div class="stat-value" id="networth-display"></div></div>
-  <div class="stat-box"><div class="stat-label">Income / yr</div><div class="stat-value" id="income-display"></div></div>
-</div>
+				/* ── CONTENT ── */
+				#content { flex: 1; overflow-y: auto; padding: 24px; }
+				.page { display: none; }
+				.page.active { display: block; }
+				.page-title { font-size: 0.7em; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
 
-<div class="section">
-  <div class="section-title">Investments</div>
-  <div class="investment-row">
-    <div class="inv-name">📊 Index Fund</div>
-    <div class="inv-price">$<span id="if-price"></span>/share</div>
-    <div class="inv-holding">Shares: <span id="if-shares"></span></div>
-    <div class="inv-change" id="if-change">—</div>
-    <div class="btn-row">
-      <input type="number" class="amount-input" id="if-amount" value="1" min="1">
-      <button class="btn" id="buy-btn">Buy</button>
-      <button class="btn danger" id="sell-btn">Sell</button>
+				/* ── SHARED ── */
+				.section { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 4px; padding: 16px; margin-bottom: 14px; }
+				.section-title { font-size: 0.68em; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+				.stat-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 14px; }
+				.stat-box { display: flex; flex-direction: column; gap: 3px; }
+				.stat-label { font-size: 0.65em; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+				.stat-value { font-size: 1.05em; color: #00ff88; }
+				.stat-value.yellow { color: #ffcc00; }
+				.stat-value.white  { color: #e0e0e0; }
+
+				.inv-change { font-size: 0.82em; }
+				.pos { color: #00ff88; } .neg { color: #ff4444; }
+
+				.btn {
+				background: #1a1a1a; border: 1px solid #333; color: #aaa;
+				padding: 6px 12px; border-radius: 3px; cursor: pointer;
+				font-family: monospace; font-size: 0.82em;
+				transition: border-color 0.15s, color 0.15s;
+				}
+				.btn:hover { border-color: #00ff88; color: #00ff88; }
+				.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+				.btn.primary  { border-color: #00ff88; color: #00ff88; }
+				.btn.danger   { border-color: #ff4444; color: #ff4444; }
+				.btn.danger:hover { background: #ff444415; }
+				.btn.work     { border-color: #ffcc00; color: #ffcc00; font-size: 0.9em; padding: 8px 12px; }
+				.btn.work:hover { background: #ffcc0015; }
+				.btn-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+				.amount-input {
+				background: #111; border: 1px solid #333; color: #e0e0e0;
+				padding: 5px 8px; border-radius: 3px;
+				font-family: monospace; font-size: 0.82em; width: 80px;
+				}
+
+				canvas.spark {
+				width: 100%; height: 100px; display: block;
+				background: #111; border-radius: 3px;
+				}
+
+				.log {
+				background: #0d0d0d; border: 1px solid #1f1f1f;
+				border-radius: 4px; padding: 10px;
+				height: 160px; overflow-y: auto;
+				font-size: 0.76em; line-height: 1.8;
+				}
+				.log-entry       { color: #555; }
+				.log-entry.good  { color: #00cc66; }
+				.log-entry.bad   { color: #ff6666; }
+				.log-entry.event { color: #ffcc00; }
+				.log-entry.info  { color: #66aaff; }
+
+				.auto-row { display: flex; gap: 8px; align-items: center; font-size: 0.78em; color: #555; }
+
+				/* ── CHARTS ── */
+				.chart-wrap { display: flex; gap: 6px; }
+				.y-axis {
+				width: 48px; min-width: 48px;
+				display: flex; flex-direction: column;
+				justify-content: space-between;
+				font-size: 0.62em; color: #444;
+				text-align: right;
+				padding: 2px 4px 18px 0;
+				}
+				.chart-area { flex: 1; display: flex; flex-direction: column; }
+				.x-axis {
+				display: flex; justify-content: space-between;
+				font-size: 0.62em; color: #444;
+				padding: 3px 0 0 0;
+				height: 16px;
+				}
+				canvas.spark { width: 100%; height: 110px; display: block; background: #111; border-radius: 3px; }
+
+				.debug-grid {
+				display: grid;
+				grid-template-columns: 1fr auto;
+				gap: 8px 16px;
+				align-items: center;
+				font-size: 0.82em;
+				color: #888;
+				}
+				.debug-grid label { color: #777; }
+
+				/* ── BONDS ── */
+				.yield-labels {
+				display: flex; justify-content: space-between;
+				font-size: 0.68em; color: #555; margin-top: 4px; padding: 0 2px;
+				}
+				.bond-buy-row {
+				display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;
+				}
+				.bond-field { display: flex; flex-direction: column; gap: 5px; }
+
+				.bond-holdings-row {
+				display: grid;
+				grid-template-columns: 60px 50px 55px 70px 80px 1fr auto;
+				gap: 0 12px;
+				align-items: center;
+				padding: 7px 0;
+				border-bottom: 1px solid #1e1e1e;
+				font-size: 0.78em;
+				color: #888;
+				}
+				.bond-holdings-row:last-child { border-bottom: none; }
+				.bond-holdings-header {
+				font-size: 0.65em; color: #444; text-transform: uppercase; letter-spacing: 1px;
+				display: grid;
+				grid-template-columns: 60px 50px 55px 70px 80px 1fr auto;
+				gap: 0 12px;
+				padding-bottom: 6px;
+				border-bottom: 1px solid #1e1e1e;
+				margin-bottom: 2px;
+				}
+			</style>
+		</head>
+	<body>
+
+		<!-- ── SIDEBAR ── -->
+		<div id="sidebar">
+			<h1>
+				INVEST<br>ROGUE</h1>
+			<hr class="side-divider">
+
+				<div class="side-stat">
+					<div class="side-label">Day</div>
+					<div class="side-value white">
+						<span id="s-day">1</span> / <span id="s-maxdays"></span>
+					</div>
+					<div class="year-bar">
+						<div class="year-fill" id="s-day-fill" style="width:0%"></div>
+					</div>
+				</div>
+
+				<div class="side-stat">
+					<div class="side-label">Year</div>
+					<div class="side-value white" id="s-year">1</div>
+				</div>
+
+				<div class="side-stat">
+					<div class="side-label">Cash</div>
+					<div class="side-value" id="s-cash"></div>
+				</div>
+
+				<div class="side-stat">
+					<div class="side-label">Portfolio</div>
+					<div class="side-value yellow" id="s-portfolio"></div>
+				</div>
+
+				<div class="side-stat">
+					<div class="side-label">Net Worth</div>
+					<div class="side-value" id="s-networth"></div>
+				</div>
+
+				<hr class="side-divider">
+
+					<div class="side-actions">
+						<button class="btn work" id="work-btn">💼 Work (+$100)</button>
+						<button class="btn primary" id="next-btn">⏩ Next Day</button>
+						<button class="btn" id="autoplay-btn">▶ Auto</button>
+						<div class="auto-row">
+							<label>ms / day</label>
+							<input id="auto-interval" class="amount-input" type="number" value="200" min="16" style="width:60px">
     </div>
-  </div>
-</div>
+						<button class="btn" id="reset-btn">↺ New Run</button>
+					</div>
+				</div>
 
-<div class="section">
-  <div class="section-title">Actions</div>
-  <div class="btn-row">
-    <button class="btn primary" id="next-btn">⏩ Next Year</button>
-    <button class="btn" id="reset-btn">↺ New Run</button>
-  </div>
-</div>
+		<!-- ── MAIN ── -->
+		<div id="main">
+			<nav id="topnav">
+				<button class="nav-tab active" data-page="overview">Overview</button>
+				<button class="nav-tab" data-page="index-fund">📊 Index Fund</button>
+				<button class="nav-tab" data-page="bonds">💵 Bonds</button>
+				<button class="nav-tab" data-page="crypto">🪙 Crypto</button>
+				<button class="nav-tab" data-page="debug">⚙ Debug</button>
+			</nav>
 
-<div class="section">
-  <div class="section-title">Log</div>
-  <div class="log" id="log"></div>
-</div>
+			<div id="content">
 
-<script type="module">
-  import { newState, buy, sell, nextYear, portfolioValue, netWorth } from "./game.js";
+				<!-- OVERVIEW -->
+				<div class="page active" id="page-overview">
+					<div class="page-title">Overview</div>
+					<div class="section">
+						<div class="section-title">Net Worth History</div>
+						<canvas id="networth-graph" class="spark"></canvas>
+					</div>
+					<div class="section">
+						<div class="section-title">Log</div>
+						<div class="log" id="log"></div>
+					</div>
+				</div>
 
-  const fmt = n => "$" + Math.round(n).toLocaleString();
-  let state = newState();
+				<!-- INDEX FUND -->
+				<div class="page" id="page-index-fund">
+					<div class="page-title">Index Fund</div>
+					<div class="section">
+						<div class="stat-row">
+							<div class="stat-box">
+								<div class="stat-label">Price / share</div>
+								<div class="stat-value">
+									$<span id="if-price"></span>
+								</div>
+							</div>
+							<div class="stat-box">
+								<div class="stat-label">Shares held</div>
+								<div class="stat-value" id="if-shares"></div>
+							</div>
+							<div class="stat-box">
+								<div class="stat-label">Day change</div>
+								<div id="if-change" class="inv-change">—</div>
+							</div>
+							<div class="stat-box">
+								<div class="stat-label">Value</div>
+								<div class="stat-value yellow" id="if-value"></div>
+							</div>
+						</div>
+						<div class="btn-row">
+							<input type="number" class="amount-input" id="if-amount" value="1" min="1">
+								<button class="btn" id="buy-btn">Buy</button>
+								<button class="btn danger" id="sell-btn">Sell</button>
+							</div>
+					</div>
+					<div class="section">
+						<div class="section-title">Recent — Daily</div>
+						<div class="chart-wrap">
+							<div class="y-axis" id="if-daily-yaxis"></div>
+							<div class="chart-area">
+								<canvas id="price-graph" class="spark"></canvas>
+								<div class="x-axis" id="if-daily-xaxis"></div>
+							</div>
+						</div>
+					</div>
+					<div class="section">
+						<div class="section-title">Long Term — Monthly</div>
+						<div class="chart-wrap">
+							<div class="y-axis" id="if-monthly-yaxis"></div>
+							<div class="chart-area">
+								<canvas id="price-graph-monthly" class="spark"></canvas>
+								<div class="x-axis" id="if-monthly-xaxis"></div>
+							</div>
+						</div>
+					</div>
+				</div>
 
-  function render(s) {
-    const h = s.indexFund.history;
-    document.getElementById("cash-display").textContent      = fmt(s.cash);
-    document.getElementById("portfolio-display").textContent = fmt(portfolioValue(s));
-    document.getElementById("networth-display").textContent  = fmt(netWorth(s));
-    document.getElementById("income-display").textContent    = fmt(s.income);
-    document.getElementById("year-display").textContent      = s.year;
-    document.getElementById("year-fill").style.width         = (s.year / s.maxYears * 100) + "%";
-    document.getElementById("if-price").textContent          = s.indexFund.price.toFixed(2);
-    document.getElementById("if-shares").textContent         = s.indexFund.shares;
-    document.getElementById("next-btn").disabled             = s.year > s.maxYears;
+				<!-- BONDS -->
+				<div class="page" id="page-bonds">
+					<div class="page-title">Bonds</div>
 
-    if (h.length >= 2) {
-      const pct = ((h[h.length-1] - h[h.length-2]) / h[h.length-2] * 100).toFixed(1);
-      const el = document.getElementById("if-change");
-      el.textContent = (pct >= 0 ? "▲" : "▼") + Math.abs(pct) + "%";
-      el.className = "inv-change " + (pct >= 0 ? "pos" : "neg");
-    }
+					<div class="section">
+						<div class="section-title">Yield Curve</div>
+						<canvas id="bonds-yield-curve" style="width:100%;height:120px;display:block;background:#111;border-radius:3px;"></canvas>
+						<div class="yield-labels" id="yield-labels"></div>
+					</div>
 
-    // Append only new log entries
-    const logEl = document.getElementById("log");
-    const existing = logEl.children.length;
-    s.log.slice(existing).forEach(({ msg, type }) => {
-      const div = document.createElement("div");
-      div.className = "log-entry " + type;
-      div.textContent = `[Yr ${s.year - (s.log.length - s.log.indexOf(s.log.find(e => e.msg === msg)))}] ${msg}`;
-      logEl.appendChild(div);
-    });
-    logEl.scrollTop = logEl.scrollHeight;
+					<div class="section">
+						<div class="section-title">Purchase Bond</div>
+						<div class="bond-buy-row">
+							<div class="bond-field">
+								<div class="stat-label">Face Value ($)</div>
+								<input type="number" class="amount-input" id="bond-face-value" value="1000" min="100" step="100" style="width:100px;">
+          </div>
+							<div class="bond-field">
+								<div class="stat-label">Term (years)</div>
+								<select class="amount-input" id="bond-term" style="width:80px;">
+									<option value="1">1 yr</option>
+									<option value="2">2 yr</option>
+									<option value="5" selected="">5 yr</option>
+									<option value="10">10 yr</option>
+									<option value="30">30 yr</option>
+								</select>
+							</div>
+							<div class="bond-field">
+								<div class="stat-label">Yield</div>
+								<div class="stat-value pos" id="bond-preview-yield">—</div>
+							</div>
+							<div class="bond-field">
+								<div class="stat-label">Annual Income</div>
+								<div class="stat-value white" id="bond-preview-income">—</div>
+							</div>
+							<button class="btn primary" id="buy-bonds-btn" style="align-self:flex-end;">Buy Bond</button>
+						</div>
+					</div>
+
+					<div class="section">
+						<div class="section-title">Holdings</div>
+						<div id="bond-holdings-list">
+							<div style="color:#444;font-size:0.8em;">No bonds held.</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- CRYPTO -->
+				<div class="page" id="page-crypto">
+					<div class="page-title">Crypto</div>
+					<div class="section">
+						<div class="stat-row">
+							<div class="stat-box">
+								<div class="stat-label">Price / coin</div>
+								<div class="stat-value">
+									$<span id="crypto-price"></span>
+								</div>
+							</div>
+							<div class="stat-box">
+								<div class="stat-label">Coins held</div>
+								<div class="stat-value" id="crypto-coins"></div>
+							</div>
+							<div class="stat-box">
+								<div class="stat-label">Day change</div>
+								<div id="crypto-change" class="inv-change">—</div>
+							</div>
+							<div class="stat-box">
+								<div class="stat-label">Value</div>
+								<div class="stat-value yellow" id="crypto-value"></div>
+							</div>
+						</div>
+						<div class="btn-row">
+							<input type="number" class="amount-input" id="crypto-amount" value="1" min="1">
+								<button class="btn" id="buy-crypto-btn">Buy</button>
+								<button class="btn danger" id="sell-crypto-btn">Sell</button>
+							</div>
+					</div>
+					<div class="section">
+						<div class="section-title">Price History</div>
+						<canvas id="crypto-graph" class="spark"></canvas>
+					</div>
+				</div>
+
+				<!-- DEBUG -->
+				<div class="page" id="page-debug">
+					<div class="page-title">Debug — Parameters</div>
+					<p style="font-size:0.75em; color:#555; margin-bottom:16px;">Changes take effect on next New Run.</p>
+
+					<div class="section">
+						<div class="section-title">Starting Conditions</div>
+						<div class="debug-grid">
+							<label>Starting Cash ($)</label>
+							<input class="amount-input" id="dbg-start-cash" type="number" value="10000" min="0" step="1000">
+								<label>Work Payout ($)</label>
+								<input class="amount-input" id="dbg-work-payout" type="number" value="100" min="1" step="10">
+        </div>
+					</div>
+
+					<div class="section">
+						<div class="section-title">Daily Volatility</div>
+						<p style="font-size:0.72em; color:#444; margin-bottom:10px;">Standard deviation of daily price move. Real-world approx: index 1.26%, bonds 0.25%, crypto 4%.</p>
+						<div class="debug-grid">
+							<label>Index Fund (%)</label>
+							<input class="amount-input" id="dbg-vol-index" type="number" value="1.26" min="0.01" step="0.1">
+								<label>Bonds (%)</label>
+								<input class="amount-input" id="dbg-vol-bonds" type="number" value="0.25" min="0.01" step="0.05">
+									<label>Crypto (%)</label>
+									<input class="amount-input" id="dbg-vol-crypto" type="number" value="4.0" min="0.1" step="0.5">
+        </div>
+					</div>
+
+					<div class="section">
+						<div class="section-title">Bond Coupon</div>
+						<div class="debug-grid">
+							<label>Annual Coupon Rate (%)</label>
+							<input class="amount-input" id="dbg-coupon" type="number" value="3.0" min="0" step="0.5">
+        </div>
+					</div>
+
+					<div class="section">
+						<div class="section-title">Life Events</div>
+						<div class="debug-grid">
+							<label>Frequency (1 in N days)</label>
+							<input class="amount-input" id="dbg-event-freq" type="number" value="365" min="1" step="10">
+								<label>Min Cost ($)</label>
+								<input class="amount-input" id="dbg-event-min" type="number" value="800" min="0" step="100">
+									<label>Max Cost ($)</label>
+									<input class="amount-input" id="dbg-event-max" type="number" value="3300" min="0" step="100">
+        </div>
+					</div>
+
+					<button class="btn primary" id="dbg-apply-btn" style="margin-top:4px;">Apply & New Run</button>
+				</div>
+
+			</div>
+		</div>
+
+		<script type="module">
+			import { newState, buy, sell, buyBond, sellBondEarly, buyCrypto, sellCrypto, nextDay, work, portfolioValue, netWorth, YIELD_CURVE, yieldForTerm } from "./game.js";
+
+			const fmt = n => "$" + Math.round(n).toLocaleString();
+
+			function readParams() {
+			return {
+			startCash:   parseFloat(document.getElementById("dbg-start-cash").value)   || 10000,
+			workPayout:  parseFloat(document.getElementById("dbg-work-payout").value)  || 100,
+			volIndex:    parseFloat(document.getElementById("dbg-vol-index").value)     / 100 || 0.0126,
+			volBonds:    parseFloat(document.getElementById("dbg-vol-bonds").value)     / 100 || 0.0025,
+			volCrypto:   parseFloat(document.getElementById("dbg-vol-crypto").value)    / 100 || 0.04,
+			coupon:      parseFloat(document.getElementById("dbg-coupon").value)        / 100 || 0.03,
+			eventFreq:   parseFloat(document.getElementById("dbg-event-freq").value)    || 365,
+			eventMin:    parseFloat(document.getElementById("dbg-event-min").value)     || 800,
+			eventMax:    parseFloat(document.getElementById("dbg-event-max").value)     || 3300,
+			};
+			}
+
+			let params = readParams();
+			let state = newState(params);
+			let autoplayInterval = null;
+			let renderedLogCount = 0;
+
+			// Tab switching
+			document.querySelectorAll(".nav-tab").forEach(tab => {
+			tab.addEventListener("click", () => {
+			document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+			document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+			tab.classList.add("active");
+			document.getElementById("page-" + tab.dataset.page).classList.add("active");
+			renderGraphs(state);
+			});
+			});
+
+			function setChange(elId, history) {
+			if (history.length < 2) return;
+    const pct = ((history[history.length-1] - history[history.length-2]) / history[history.length-2] * 100).toFixed(2);
+    const el = document.getElementById(elId);
+    el.textContent = (pct >= 0 ? "▲" : "▼") + Math.abs(pct) + "%";
+    el.className = "inv-change " + (pct >= 0 ? "pos" : "neg");
   }
 
-  function getQty() { return parseInt(document.getElementById("if-amount").value) || 1; }
+  function render(s) {
+    const year = Math.floor((s.day - 1) / 365) + 1;
 
-  document.getElementById("buy-btn").onclick   = () => { state = buy(state, getQty());      render(state); };
-  document.getElementById("sell-btn").onclick  = () => { state = sell(state, getQty());     render(state); };
-  document.getElementById("next-btn").onclick  = () => { state = nextYear(state);           render(state); };
-  document.getElementById("reset-btn").onclick = () => {
-    state = newState();
-    state = { ...state, log: [{ msg: "New run started.", type: "info" }] };
-    document.getElementById("log").innerHTML = "";
-    render(state);
-  };
+    // Sidebar
+    document.getElementById("s-day").textContent       = s.day.toLocaleString();
+    document.getElementById("s-maxdays").textContent   = s.maxDays.toLocaleString();
+    document.getElementById("s-year").textContent      = year;
+    document.getElementById("s-day-fill").style.width  = (s.day / s.maxDays * 100) + "%";
+    document.getElementById("s-cash").textContent      = fmt(s.cash);
+    document.getElementById("s-portfolio").textContent = fmt(portfolioValue(s));
+    document.getElementById("s-networth").textContent  = fmt(netWorth(s));
+    document.getElementById("next-btn").disabled       = s.day >= s.maxDays;
+    document.getElementById("work-btn").disabled       = s.day >= s.maxDays;
 
-  state = { ...state, log: [{ msg: "New run started.", type: "info" }] };
-  render(state);
-</script>
-</body>
+    // Index Fund
+    document.getElementById("if-price").textContent  = s.indexFund.price.toFixed(2);
+    document.getElementById("if-shares").textContent = s.indexFund.shares;
+    document.getElementById("if-value").textContent  = fmt(s.indexFund.shares * s.indexFund.price);
+    setChange("if-change", s.indexFund.history);
+
+    // Bonds — yield curve preview
+    updateBondPreview();
+    renderBondHoldings(s);
+
+    // Crypto
+    document.getElementById("crypto-price").textContent = s.crypto.price.toFixed(2);
+    document.getElementById("crypto-coins").textContent  = s.crypto.coins;
+    document.getElementById("crypto-value").textContent  = fmt(s.crypto.coins * s.crypto.price);
+    setChange("crypto-change", s.crypto.history);
+
+    // Log — only append new entries
+    const logEl = document.getElementById("log");
+    s.log.slice(renderedLogCount).forEach(({ msg, type, day }) => {
+      const div = document.createElement("div");
+      div.className = "log-entry " + (type || "");
+      div.textContent = `[Day ${day}] ${msg}`;
+      logEl.appendChild(div);
+    });
+    renderedLogCount = s.log.length;
+    logEl.scrollTop = logEl.scrollHeight;
+
+    renderGraphs(s);
+  }
+
+  function drawChart(canvas, data, color, yAxisEl, xAxisEl, xLabels) {
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    if (!w || !h) return;
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+    if (!data || data.length < 2) return;
+
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const range = max - min || 1;
+    const pad = { t: 4, b: 4 };
+
+    // Gridlines (3)
+    const gridLevels = [0, 0.5, 1];
+    ctx.strokeStyle = "#1e1e1e";
+    ctx.lineWidth = 1;
+    gridLevels.forEach(level => {
+      const y = h - pad.b - level * (h - pad.t - pad.b);
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    });
+
+    // Line
+    ctx.beginPath();
+    data.forEach((v, i) => {
+      const x = (i / (data.length - 1)) * w;
+      const y = h - pad.b - ((v - min) / range) * (h - pad.t - pad.b);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Y axis labels
+    if (yAxisEl) {
+      const fmtPrice = v => v >= 1000 ? "$" + (v/1000).toFixed(1) + "k" : "$" + v.toFixed(0);
+      yAxisEl.innerHTML = `
+        <span>${fmtPrice(max)}</span>
+			<span>${fmtPrice((min + max) / 2)}</span>
+			<span>${fmtPrice(min)}</span>`;
+			}
+
+			// X axis labels
+			if (xAxisEl && xLabels && xLabels.length) {
+			xAxisEl.innerHTML = xLabels.map(l => `<span>${l}</span>`).join("");
+			}
+			}
+
+			function drawYieldCurve() {
+			const canvas = document.getElementById("bonds-yield-curve");
+			if (!canvas) return;
+			const ctx = canvas.getContext("2d");
+			const dpr = window.devicePixelRatio || 1;
+			const w = canvas.clientWidth;
+			const h = canvas.clientHeight;
+			if (!w || !h) return;
+			canvas.width = Math.floor(w * dpr);
+			canvas.height = Math.floor(h * dpr);
+			ctx.scale(dpr, dpr);
+			ctx.clearRect(0, 0, w, h);
+
+			const yields = YIELD_CURVE.map(p => p.yield);
+			const minY = Math.min(...yields) * 0.8;
+			const maxY = Math.max(...yields) * 1.1;
+			const range = maxY - minY;
+			const pad = { t: 8, b: 8, l: 4, r: 4 };
+			const pw = w - pad.l - pad.r;
+			const ph = h - pad.t - pad.b;
+			const maxTerm = YIELD_CURVE[YIELD_CURVE.length - 1].term;
+
+			// Gridlines
+			ctx.strokeStyle = "#1e1e1e";
+			ctx.lineWidth = 1;
+			[0, 0.5, 1].forEach(level => {
+			const y = pad.t + ph - level * ph;
+			ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+			});
+
+			// Curve
+			ctx.beginPath();
+			YIELD_CURVE.forEach((p, i) => {
+			const x = pad.l + (p.term / maxTerm) * pw;
+			const y = pad.t + ph - ((p.yield - minY) / range) * ph;
+			i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+			});
+			ctx.strokeStyle = "#66aaff";
+			ctx.lineWidth = 2;
+			ctx.stroke();
+
+			// Dots + yield labels on canvas
+			YIELD_CURVE.forEach(p => {
+			const x = pad.l + (p.term / maxTerm) * pw;
+			const y = pad.t + ph - ((p.yield - minY) / range) * ph;
+			ctx.beginPath();
+			ctx.arc(x, y, 3, 0, Math.PI * 2);
+			ctx.fillStyle = "#66aaff";
+			ctx.fill();
+			ctx.fillStyle = "#66aaff";
+			ctx.font = `${10 * dpr}px monospace`;
+			ctx.fillText((p.yield * 100).toFixed(1) + "%", x - 10, y - 8);
+			});
+
+			// X axis labels via DOM
+			const labelsEl = document.getElementById("yield-labels");
+			if (labelsEl) {
+			labelsEl.innerHTML = YIELD_CURVE.map(p => `<span>${p.term}yr</span>`).join("");
+			}
+			}
+
+			function updateBondPreview() {
+			const termEl = document.getElementById("bond-term");
+			const faceEl = document.getElementById("bond-face-value");
+			if (!termEl || !faceEl) return;
+			const term = parseInt(termEl.value);
+			const face = parseFloat(faceEl.value) || 0;
+			const y = yieldForTerm(term);
+			const yieldEl = document.getElementById("bond-preview-yield");
+			const incomeEl = document.getElementById("bond-preview-income");
+			if (yieldEl) yieldEl.textContent = (y * 100).toFixed(2) + "%";
+			if (incomeEl) incomeEl.textContent = fmt(face * y) + " / yr";
+			}
+
+			function renderBondHoldings(s) {
+			const el = document.getElementById("bond-holdings-list");
+			if (!el) return;
+			const holdings = s.bondHoldings || [];
+			if (!holdings.length) {
+			el.innerHTML = `<div style="color:#444;font-size:0.8em;">No bonds held.</div>`;
+			return;
+			}
+			el.innerHTML = `
+			<div class="bond-holdings-header">
+				<span>Face Val</span>
+				<span>Term</span>
+				<span>Yield</span>
+				<span>Matures</span>
+				<span>Accrued</span>
+				<span></span>
+				<span></span>
+			</div>
+			${holdings.map(b => {
+			const daysLeft = b.maturityDay - s.day;
+			const yearsLeft = (daysLeft / 365).toFixed(1);
+			const maturesYr = Math.ceil(b.maturityDay / 365);
+			return `
+			<div class="bond-holdings-row">
+				<span class="pos">${fmt(b.faceValue)}</span>
+				<span>${b.term}yr</span>
+				<span>${(b.yield * 100).toFixed(2)}%</span>
+				<span>Yr ${maturesYr}</span>
+				<span style="color:#66aaff">${fmt(b.couponAccrued)}</span>
+				<span style="color:#444">${yearsLeft}yr left</span>
+				<button class="btn danger" style="padding:3px 8px;font-size:0.75em;"
+				  onclick="window._sellBond('${b.id}')">Sell</button>
+			</div>`;
+			}).join("")}
+			`;
+			}
+
+			// Expose sell handler to DOM (bonds page uses onclick)
+			window._sellBond = (id) => {
+			state = sellBondEarly(state, id);
+			render(state);
+			};
+			// One snapshot per 30 days from day 1
+			// We store full history up to 500 pts (recent days), so for monthly
+			// we reconstruct from netWorthHistory cadence. Instead, track separately in state.
+			// For now: sample indexFund.monthlyHistory if available, else fall back.
+			return state.indexFund.monthlyHistory || [];
+			}
+
+			function dailyXLabels(history, currentDay) {
+			// Show 3 labels: oldest visible day, midpoint, today
+			const totalVisible = history.length;
+			const oldestDay = Math.max(1, currentDay - totalVisible + 1);
+			const midDay = Math.round((oldestDay + currentDay) / 2);
+			return [`Day ${oldestDay}`, `Day ${midDay}`, `Day ${currentDay}`];
+			}
+
+			function monthlyXLabels(monthlyHistory, currentDay) {
+			const totalMonths = monthlyHistory.length;
+			if (!totalMonths) return [];
+			const midMonth = Math.round(totalMonths / 2);
+			const toYr = m => "Yr " + Math.max(1, Math.ceil(m * 30 / 365));
+			return [toYr(1), toYr(midMonth), toYr(totalMonths)];
+			}
+
+			function renderGraphs(s) {
+			const monthly = s.indexFund.monthlyHistory || [];
+			const dxLabels = dailyXLabels(s.indexFund.history, s.day);
+			const mxLabels = monthlyXLabels(monthly, s.day);
+
+			drawChart(
+			document.getElementById("price-graph"), s.indexFund.history, "#00ff88",
+			document.getElementById("if-daily-yaxis"), document.getElementById("if-daily-xaxis"), dxLabels
+			);
+			drawChart(
+			document.getElementById("price-graph-monthly"), monthly, "#00ff88",
+			document.getElementById("if-monthly-yaxis"), document.getElementById("if-monthly-xaxis"), mxLabels
+			);
+			drawChart(document.getElementById("crypto-graph"),   s.crypto.history,    "#ff66cc", null, null, null);
+			drawChart(document.getElementById("networth-graph"), s.netWorthHistory,   "#ffcc00", null, null, null);
+			drawYieldCurve();
+			}
+
+			const getQty = id => parseInt(document.getElementById(id).value) || 1;
+
+			function startAuto() {
+			if (autoplayInterval) clearInterval(autoplayInterval);
+			const ms = Math.max(16, parseInt(document.getElementById("auto-interval").value) || 200);
+			document.getElementById("autoplay-btn").textContent = "⏸ Stop";
+			autoplayInterval = setInterval(() => {
+			state = nextDay(state, params);
+			render(state);
+			if (state.day >= state.maxDays) stopAuto();
+			}, ms);
+			}
+
+			function stopAuto() {
+			clearInterval(autoplayInterval);
+			autoplayInterval = null;
+			document.getElementById("autoplay-btn").textContent = "▶ Auto";
+			}
+
+			document.getElementById("work-btn").onclick        = () => { state = work(state, params);                              render(state); };
+			document.getElementById("next-btn").onclick        = () => { state = nextDay(state, params);                            render(state); };
+			document.getElementById("buy-btn").onclick         = () => { state = buy(state, getQty("if-amount"));                   render(state); };
+			document.getElementById("sell-btn").onclick        = () => { state = sell(state, getQty("if-amount"));                  render(state); };
+			document.getElementById("buy-bonds-btn").onclick   = () => {
+			const face = parseFloat(document.getElementById("bond-face-value").value) || 1000;
+			const term = parseInt(document.getElementById("bond-term").value) || 5;
+			state = buyBond(state, face, term);
+			render(state);
+			};
+			document.getElementById("buy-crypto-btn").onclick  = () => { state = buyCrypto(state, getQty("crypto-amount"));         render(state); };
+			document.getElementById("sell-crypto-btn").onclick = () => { state = sellCrypto(state, getQty("crypto-amount"));        render(state); };
+			document.getElementById("autoplay-btn").onclick    = () => { autoplayInterval ? stopAuto() : startAuto(); };
+
+			// Bond preview updates live
+			document.getElementById("bond-term").addEventListener("change", updateBondPreview);
+			document.getElementById("bond-face-value").addEventListener("input", updateBondPreview);
+			document.getElementById("autoplay-btn").onclick    = () => { autoplayInterval ? stopAuto() : startAuto(); };
+			document.getElementById("reset-btn").onclick       = () => {
+			stopAuto();
+			state = { ...newState(params), log: [{ msg: "New run started.", type: "info", day: 1 }] };
+			document.getElementById("log").innerHTML = "";
+			renderedLogCount = 0;
+			render(state);
+			};
+			document.getElementById("dbg-apply-btn").onclick   = () => {
+			stopAuto();
+			params = readParams();
+			state = { ...newState(params), log: [{ msg: `New run started with custom params.`, type: "info", day: 1 }] };
+			document.getElementById("log").innerHTML = "";
+			renderedLogCount = 0;
+			render(state);
+			};
+
+			state = { ...state, log: [{ msg: "New run started.", type: "info", day: 1 }] };
+			render(state);
+		</script>
+	</body>
 </html>
