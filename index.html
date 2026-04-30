@@ -704,12 +704,6 @@
 			state = sellBondEarly(state, id);
 			render(state);
 			};
-			// One snapshot per 30 days from day 1
-			// We store full history up to 500 pts (recent days), so for monthly
-			// we reconstruct from netWorthHistory cadence. Instead, track separately in state.
-			// For now: sample indexFund.monthlyHistory if available, else fall back.
-			return state.indexFund.monthlyHistory || [];
-			}
 
 			function dailyXLabels(history, currentDay) {
 			// Show 3 labels: oldest visible day, midpoint, today
