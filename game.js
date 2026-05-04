@@ -2,8 +2,7 @@
 // GAME LOGIC — no DOM, no rendering, pure state + functions
 // ============================================================
 
-// Yield curve: term (years) → annual yield
-// Simple static upward-sloping curve
+// Yield curve baseline: term (years) → annual yield (curve in state mean-reverts here over time)
 export const YIELD_CURVE = [
   { term: 1,  yield: 0.030 },
   { term: 2,  yield: 0.035 },
@@ -12,27 +11,121 @@ export const YIELD_CURVE = [
   { term: 30, yield: 0.052 },
 ];
 
-export function yieldForTerm(term) {
-  const exact = YIELD_CURVE.find(p => p.term === term);
+export const INDEX_FUNDS = [
+  { id: "spy",  name: "SPY (S&P 500)", startPrice: 100.0, dailyVol: 0.0126 },
+  { id: "qqq",  name: "QQQ (Nasdaq 100)", startPrice: 90.0, dailyVol: 0.0150 },
+  { id: "vti",  name: "VTI (Total Market)", startPrice: 80.0, dailyVol: 0.0118 },
+  { id: "dia",  name: "DIA (Dow 30)", startPrice: 70.0, dailyVol: 0.0105 },
+  { id: "iwm",  name: "IWM (Russell 2000)", startPrice: 65.0, dailyVol: 0.0140 },
+];
+
+export const CRYPTOS = [
+  { id: "btc", name: "Bitcoin (BTC)", startPrice: 50.0, dailyVol: 0.0400 },
+  { id: "eth", name: "Ethereum (ETH)", startPrice: 38.0, dailyVol: 0.0480 },
+  { id: "sol", name: "Solana (SOL)", startPrice: 24.0, dailyVol: 0.0600 },
+];
+
+export const STOCKS = [
+  { id: "aapl", name: "Apple (AAPL)", startPrice: 45.0, dailyVol: 0.0180 },
+  { id: "msft", name: "Microsoft (MSFT)", startPrice: 48.0, dailyVol: 0.0170 },
+  { id: "nvda", name: "NVIDIA (NVDA)", startPrice: 42.0, dailyVol: 0.0300 },
+  { id: "tsla", name: "Tesla (TSLA)", startPrice: 32.0, dailyVol: 0.0360 },
+];
+
+export const OPTIONS = [
+  { id: "spy-90-put",  name: "SPY 90 Put",  optionType: "put",  strike: 90,  startPrice: 7.0,  dailyVol: 0.0800, underlyingId: "spy", leverage: 3.2, theta: 0.0035, direction: -1 },
+  { id: "spy-100-put", name: "SPY 100 Put", optionType: "put",  strike: 100, startPrice: 9.0,  dailyVol: 0.0820, underlyingId: "spy", leverage: 3.3, theta: 0.0038, direction: -1 },
+  { id: "spy-110-put", name: "SPY 110 Put", optionType: "put",  strike: 110, startPrice: 11.5, dailyVol: 0.0850, underlyingId: "spy", leverage: 3.4, theta: 0.0040, direction: -1 },
+  { id: "spy-90-call",  name: "SPY 90 Call",  optionType: "call", strike: 90,  startPrice: 14.0, dailyVol: 0.0800, underlyingId: "spy", leverage: 3.2, theta: 0.0035, direction: 1 },
+  { id: "spy-100-call", name: "SPY 100 Call", optionType: "call", strike: 100, startPrice: 10.0, dailyVol: 0.0820, underlyingId: "spy", leverage: 3.3, theta: 0.0038, direction: 1 },
+  { id: "spy-110-call", name: "SPY 110 Call", optionType: "call", strike: 110, startPrice: 7.5, dailyVol: 0.0850, underlyingId: "spy", leverage: 3.4, theta: 0.0040, direction: 1 },
+];
+
+/** Interpolate annual yield for a term (years) from a pillar curve. */
+export function interpolateYield(curve, term) {
+  const exact = curve.find(p => p.term === term);
   if (exact) return exact.yield;
-  // linear interpolation for any term between curve points
-  const below = [...YIELD_CURVE].reverse().find(p => p.term <= term);
-  const above = YIELD_CURVE.find(p => p.term >= term);
+  const below = [...curve].reverse().find(p => p.term <= term);
+  const above = curve.find(p => p.term >= term);
   if (!below) return above.yield;
   if (!above) return below.yield;
   const t = (term - below.term) / (above.term - below.term);
   return below.yield + t * (above.yield - below.yield);
 }
 
+/** Current market yield for `term` using the state's evolving curve (falls back to baseline). */
+export function yieldForTerm(state, term) {
+  const curve = state && state.yieldCurve && state.yieldCurve.length ? state.yieldCurve : YIELD_CURVE;
+  return interpolateYield(curve, term);
+}
+
+function cloneYieldCurve(curve) {
+  return curve.map(p => ({ term: p.term, yield: p.yield }));
+}
+
+/** One-day random walk + mean reversion toward YIELD_CURVE pillars. */
+function evolveYieldCurve(state, params = {}) {
+  const vol = params.yieldCurveVol ?? 0.00014;
+  const kappa = params.yieldCurveKappa ?? 0.018;
+  const yMin = params.yieldCurveMin ?? 0.002;
+  const yMax = params.yieldCurveMax ?? 0.20;
+  const curve = state.yieldCurve && state.yieldCurve.length ? state.yieldCurve : YIELD_CURVE;
+  return YIELD_CURVE.map((base, i) => {
+    const current = curve[i]?.yield ?? base.yield;
+    const shock = randn() * vol;
+    let y = current + shock + kappa * (base.yield - current);
+    y = Math.max(yMin, Math.min(yMax, y));
+    return { term: base.term, yield: y };
+  });
+}
+
+// Jobs — daily pay when you click Work (before advancing the day)
+// minNetWorth: minimum net worth to apply (or start with, via debug)
+const JOBS = [
+  { id: "intern", title: "Intern", dailyPay: 10, minNetWorth: 0 },
+  { id: "clerk", title: "Clerk", dailyPay: 40, minNetWorth: 100_000 },
+  { id: "analyst", title: "Analyst", dailyPay: 95, minNetWorth: 100_000 },
+  { id: "director", title: "Director", dailyPay: 220, minNetWorth: 1_000_000 },
+];
+export { JOBS };
+
+export function jobById(id) {
+  return JOBS.find(j => j.id === id) ?? JOBS[0];
+}
+
+/** Highest-tier job the player qualifies for at this net worth (JOBS ordered low → high). */
+export function highestJobForNetWorth(nw) {
+  let pick = JOBS[0];
+  for (const j of JOBS) {
+    if (nw >= j.minNetWorth) pick = j;
+  }
+  return pick;
+}
+
+export function jobUnlockedAtNetWorth(job, nw) {
+  return nw >= job.minNetWorth;
+}
+
 export function newState(params = {}) {
   const cash = params.startCash ?? 10_000;
+  const startNw = cash;
+  const wanted = jobById(params.startJobId ?? "intern");
+  const job = jobUnlockedAtNetWorth(wanted, startNw)
+    ? { ...wanted }
+    : { ...highestJobForNetWorth(startNw) };
   return {
     day: 1,
     maxDays: 365 * 30,
+    startCash: cash,
+    totalIncome: 0,
     cash,
-    indexFund: { shares: 0, price: 100.0, history: [100.0], monthlyHistory: [100.0] },
+    job,
+    indexFunds: INDEX_FUNDS.map(f => ({ ...f, shares: 0, price: f.startPrice, history: [f.startPrice], monthlyHistory: [f.startPrice] })),
     bondHoldings: [],   // list of individual bond purchases
-    crypto:    { coins: 0, price: 50.0, history: [50.0] },
+    yieldCurve: cloneYieldCurve(YIELD_CURVE),
+    cryptos: CRYPTOS.map(c => ({ ...c, coins: 0, price: c.startPrice, history: [c.startPrice] })),
+    stocks: STOCKS.map(stk => ({ ...stk, shares: 0, price: stk.startPrice, history: [stk.startPrice] })),
+    options: OPTIONS.map(opt => ({ ...opt, contracts: 0, price: opt.startPrice, history: [opt.startPrice] })),
     netWorthHistory: [cash],
     log: [],
   };
@@ -40,9 +133,11 @@ export function newState(params = {}) {
 
 export function portfolioValue(state) {
   const bondsValue = (state.bondHoldings || []).reduce((sum, b) => sum + b.faceValue, 0);
-  return (state.indexFund.shares * state.indexFund.price)
-       + bondsValue
-       + (state.crypto.coins * state.crypto.price);
+  const indexValue = (state.indexFunds || []).reduce((sum, f) => sum + (f.shares * f.price), 0);
+  const cryptoValue = (state.cryptos || []).reduce((sum, c) => sum + (c.coins * c.price), 0);
+  const stockValue = (state.stocks || []).reduce((sum, st) => sum + (st.shares * st.price), 0);
+  const optionsValue = (state.options || []).reduce((sum, op) => sum + (op.contracts * op.price), 0);
+  return indexValue + bondsValue + cryptoValue + stockValue + optionsValue;
 }
 
 export function netWorth(state) {
@@ -54,26 +149,59 @@ function appendLog(state, msg, type) {
   return { ...state, log: [...state.log, { msg, type, day: state.day }] };
 }
 
-// ── index fund ──
+function tradeAsset(state, listKey, assetId, qty, mode, unitLabel) {
+  const list = state[listKey] || [];
+  const idx = list.findIndex(a => a.id === assetId);
+  if (idx < 0) return appendLog(state, `Asset not found.`, "bad");
+  const asset = list[idx];
+  const price = asset.price;
+  const holdingKey = unitLabel === "coin" ? "coins" : (unitLabel === "contract" ? "contracts" : "shares");
+  const owned = asset[holdingKey];
+
+  if (mode === "buy") {
+    const cost = qty * price;
+    if (cost > state.cash) return appendLog(state, `Need ${fmt(cost)} — only have ${fmt(state.cash)}.`, "bad");
+    const updated = { ...asset, [holdingKey]: owned + qty };
+    const nextList = [...list];
+    nextList[idx] = updated;
+    const next = { ...state, cash: state.cash - cost, [listKey]: nextList };
+    return appendLog(next, `Bought ${qty} ${asset.name} ${unitLabel}(s) @ $${price.toFixed(2)}.`, "good");
+  }
+
+  if (qty > owned) return appendLog(state, `Only have ${owned} ${unitLabel}(s).`, "bad");
+  const proceeds = qty * price;
+  const updated = { ...asset, [holdingKey]: owned - qty };
+  const nextList = [...list];
+  nextList[idx] = updated;
+  const next = { ...state, cash: state.cash + proceeds, [listKey]: nextList };
+  return appendLog(next, `Sold ${qty} ${asset.name} ${unitLabel}(s) @ $${price.toFixed(2)}.`, "info");
+}
+
+// ── index funds ──
+export function buyIndexFund(state, assetId, qty) {
+  return tradeAsset(state, "indexFunds", assetId, qty, "buy", "share");
+}
+
+export function sellIndexFund(state, assetId, qty) {
+  return tradeAsset(state, "indexFunds", assetId, qty, "sell", "share");
+}
+
+// Backwards-compatible wrappers (default to first index fund)
 export function buy(state, qty) {
-  const cost = qty * state.indexFund.price;
-  if (cost > state.cash) return appendLog(state, `Need ${fmt(cost)} — only have ${fmt(state.cash)}.`, "bad");
-  const next = { ...state, cash: state.cash - cost, indexFund: { ...state.indexFund, shares: state.indexFund.shares + qty } };
-  return appendLog(next, `Bought ${qty} Index Fund share(s) @ $${state.indexFund.price.toFixed(2)}.`, "good");
+  const first = (state.indexFunds || [])[0];
+  return first ? buyIndexFund(state, first.id, qty) : appendLog(state, "No index funds configured.", "bad");
 }
 
 export function sell(state, qty) {
-  if (qty > state.indexFund.shares) return appendLog(state, `Only have ${state.indexFund.shares} shares.`, "bad");
-  const proceeds = qty * state.indexFund.price;
-  const next = { ...state, cash: state.cash + proceeds, indexFund: { ...state.indexFund, shares: state.indexFund.shares - qty } };
-  return appendLog(next, `Sold ${qty} Index Fund share(s) @ $${state.indexFund.price.toFixed(2)}.`, "info");
+  const first = (state.indexFunds || [])[0];
+  return first ? sellIndexFund(state, first.id, qty) : appendLog(state, "No index funds configured.", "bad");
 }
 
 // ── bonds ──
 // Each bond holding: { id, faceValue, term, yield, purchaseDay, maturityDay, couponAccrued }
 export function buyBond(state, faceValue, term) {
   if (faceValue > state.cash) return appendLog(state, `Need ${fmt(faceValue)} — only have ${fmt(state.cash)}.`, "bad");
-  const y = yieldForTerm(term);
+  const y = yieldForTerm(state, term);
   const bond = {
     id: state.day + "_" + Math.random().toString(36).slice(2, 6),
     faceValue,
@@ -105,26 +233,51 @@ export function sellBondEarly(state, bondId) {
 }
 
 // ── crypto ──
-export function buyCrypto(state, qty) {
-  const cost = qty * state.crypto.price;
-  if (cost > state.cash) return appendLog(state, `Need ${fmt(cost)} — only have ${fmt(state.cash)}.`, "bad");
-  const next = { ...state, cash: state.cash - cost, crypto: { ...state.crypto, coins: state.crypto.coins + qty } };
-  return appendLog(next, `Bought ${qty} coin(s) @ $${state.crypto.price.toFixed(2)}.`, "good");
+export function buyCrypto(state, assetId, qty) {
+  return tradeAsset(state, "cryptos", assetId, qty, "buy", "coin");
 }
 
-export function sellCrypto(state, qty) {
-  if (qty > state.crypto.coins) return appendLog(state, `Only have ${state.crypto.coins} coin(s).`, "bad");
-  const proceeds = qty * state.crypto.price;
-  const next = { ...state, cash: state.cash + proceeds, crypto: { ...state.crypto, coins: state.crypto.coins - qty } };
-  return appendLog(next, `Sold ${qty} coin(s) @ $${state.crypto.price.toFixed(2)}.`, "info");
+export function sellCrypto(state, assetId, qty) {
+  return tradeAsset(state, "cryptos", assetId, qty, "sell", "coin");
+}
+
+// ── stocks ──
+export function buyStock(state, assetId, qty) {
+  return tradeAsset(state, "stocks", assetId, qty, "buy", "share");
+}
+
+export function sellStock(state, assetId, qty) {
+  return tradeAsset(state, "stocks", assetId, qty, "sell", "share");
+}
+
+// ── options ──
+export function buyOption(state, assetId, qty) {
+  return tradeAsset(state, "options", assetId, qty, "buy", "contract");
+}
+
+export function sellOption(state, assetId, qty) {
+  return tradeAsset(state, "options", assetId, qty, "sell", "contract");
 }
 
 // ── work ──
 export function work(state, params = {}) {
-  const payout = params.workPayout ?? 100;
-  const withWage = { ...state, cash: state.cash + payout };
-  const logged = appendLog(withWage, `Worked — earned $${payout}.`, "info");
+  const payout = state.job.dailyPay;
+  const withWage = { ...state, cash: state.cash + payout, totalIncome: (state.totalIncome || 0) + payout };
+  const logged = appendLog(withWage, `Worked (${state.job.title}) — earned $${payout}.`, "info");
   return nextDay(logged, params);
+}
+
+export function applyForJob(state, jobId) {
+  const job = jobById(jobId);
+  if (state.job.id === job.id) {
+    return appendLog(state, `Already employed as ${job.title}.`, "info");
+  }
+  const nw = netWorth(state);
+  if (!jobUnlockedAtNetWorth(job, nw)) {
+    return appendLog(state, `${job.title} requires net worth ${fmt(job.minNetWorth)}+ (you have ${fmt(nw)}).`, "bad");
+  }
+  const next = { ...state, job: { ...job } };
+  return appendLog(next, `New job: ${job.title} — $${job.dailyPay}/day when you Work.`, "good");
 }
 
 // ── advance one day ──
@@ -133,27 +286,20 @@ export function nextDay(state, params = {}) {
 
   let s = state;
   let cash = s.cash;
+  let incomeToday = 0;
   let newLog = [...s.log];
 
   const dailyVol  = params.volIndex  ?? 0.0126;
   const cryptoVol = params.volCrypto ?? 0.04;
-  const eventFreq = params.eventFreq ?? 365;
-  const eventMin  = params.eventMin  ?? 800;
-  const eventMax  = params.eventMax  ?? 3300;
-
-  // Index fund price
-  const ifShock = randn() * dailyVol;
-  const ifPrice = Math.max(0.01, s.indexFund.price * (1 + ifShock));
-
-  // Crypto price
-  const cryptoShock = randn() * cryptoVol;
-  const cryptoPrice = Math.max(0.01, s.crypto.price * (1 + cryptoShock));
+  const stockVol  = params.volStock  ?? 0.02;
+  const optionsVol = params.volOptions ?? 0.075;
 
   // Process bond holdings: accrue daily coupon, mature if due
   let updatedBonds = [];
   for (const bond of (s.bondHoldings || [])) {
     const dailyCoupon = bond.faceValue * (bond.yield / 365);
     cash += dailyCoupon;
+    incomeToday += dailyCoupon;
     if (s.day >= bond.maturityDay) {
       // Bond matures: return face value (already accruing coupon daily, so just remove)
       cash += bond.faceValue;
@@ -163,27 +309,58 @@ export function nextDay(state, params = {}) {
     }
   }
 
-  // Life event
-  if (Math.random() < 1 / eventFreq) {
-    const hit = Math.round(eventMin + Math.random() * (eventMax - eventMin));
-    cash = Math.max(0, cash - hit);
-    newLog.push({ msg: `⚡ Unexpected expense: $${fmt(hit)}.`, type: "event", day: s.day });
-  }
+  // Life events are temporarily disabled.
 
   const newDay = s.day + 1;
   const isMonthEnd = newDay % 30 === 0;
+  const yieldCurve = evolveYieldCurve(s, params);
+  const evolveAssets = (assets, overrideVol, includeMonthlyHistory = false) => (
+    (assets || []).map(asset => {
+      const vol = overrideVol ?? asset.dailyVol;
+      const shock = randn() * vol;
+      const price = Math.max(0.01, asset.price * (1 + shock));
+      const next = {
+        ...asset,
+        price,
+        history: [...asset.history, price].slice(-500),
+      };
+      if (includeMonthlyHistory) {
+        next.monthlyHistory = isMonthEnd
+          ? [...(asset.monthlyHistory || []), price]
+          : (asset.monthlyHistory || []);
+      }
+      return next;
+    })
+  );
+
+  const updatedIndexFunds = evolveAssets(s.indexFunds, dailyVol, true);
+  const updatedCryptos = evolveAssets(s.cryptos, cryptoVol, false);
+  const updatedStocks = evolveAssets(s.stocks, stockVol, false);
+  const updatedOptions = (s.options || []).map(option => {
+    const underlyingPrev = ((s.indexFunds || []).find(f => f.id === option.underlyingId)?.price) ?? 100;
+    const underlyingNext = ((updatedIndexFunds || []).find(f => f.id === option.underlyingId)?.price) ?? underlyingPrev;
+    const underlyingRet = underlyingPrev > 0 ? ((underlyingNext - underlyingPrev) / underlyingPrev) : 0;
+    const shock = randn() * (optionsVol ?? option.dailyVol);
+    const direction = option.direction ?? (option.optionType === "put" ? -1 : 1);
+    const drift = (underlyingRet * option.leverage * direction) + shock - (option.theta || 0.003);
+    const price = Math.max(0.01, option.price * (1 + drift));
+    return {
+      ...option,
+      price,
+      history: [...option.history, price].slice(-500),
+    };
+  });
 
   const updated = {
     ...s,
     day: newDay,
     cash,
-    indexFund: {
-      ...s.indexFund,
-      price: ifPrice,
-      history: [...s.indexFund.history, ifPrice].slice(-500),
-      monthlyHistory: isMonthEnd ? [...(s.indexFund.monthlyHistory || []), ifPrice] : (s.indexFund.monthlyHistory || []),
-    },
-    crypto: { ...s.crypto, price: cryptoPrice, history: [...s.crypto.history, cryptoPrice].slice(-500) },
+    totalIncome: (s.totalIncome || 0) + incomeToday,
+    yieldCurve,
+    indexFunds: updatedIndexFunds,
+    cryptos: updatedCryptos,
+    stocks: updatedStocks,
+    options: updatedOptions,
     bondHoldings: updatedBonds,
     log: newLog,
   };

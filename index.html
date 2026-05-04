@@ -90,10 +90,17 @@
 				.btn:hover { border-color: #00ff88; color: #00ff88; }
 				.btn:disabled { opacity: 0.3; cursor: not-allowed; }
 				.btn.primary  { border-color: #00ff88; color: #00ff88; }
+				.btn.primary.work { border-color: #ffcc00; color: #ffcc00; font-size: 0.9em; padding: 8px 12px; }
+				.btn.primary.work:hover { background: #ffcc0015; }
 				.btn.danger   { border-color: #ff4444; color: #ff4444; }
 				.btn.danger:hover { background: #ff444415; }
 				.btn.work     { border-color: #ffcc00; color: #ffcc00; font-size: 0.9em; padding: 8px 12px; }
 				.btn.work:hover { background: #ffcc0015; }
+				.job-apply-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+				.job-apply-btns .btn { font-size: 0.68em; padding: 5px 8px; border-color: #555; color: #aaa; }
+				.job-apply-btns .btn:hover { border-color: #ffcc00; color: #ffcc00; background: #ffcc0010; }
+				.job-apply-btns .btn:disabled { opacity: 0.45; cursor: not-allowed; border-color: #333; color: #555; }
+				.job-apply-btns .btn:disabled:hover { background: transparent; color: #555; border-color: #333; }
 				.btn-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 
 				.amount-input {
@@ -180,6 +187,115 @@
 				border-bottom: 1px solid #1e1e1e;
 				margin-bottom: 2px;
 				}
+				.asset-holdings-header {
+				font-size: 0.65em; color: #444; text-transform: uppercase; letter-spacing: 1px;
+				display: grid;
+				grid-template-columns: 1.7fr 0.7fr 0.8fr 0.8fr;
+				gap: 0 12px;
+				padding-bottom: 6px;
+				border-bottom: 1px solid #1e1e1e;
+				margin-bottom: 2px;
+				}
+				.asset-holdings-row {
+				display: grid;
+				grid-template-columns: 1.7fr 0.7fr 0.8fr 0.8fr;
+				gap: 0 12px;
+				align-items: center;
+				padding: 7px 0;
+				border-bottom: 1px solid #1e1e1e;
+				font-size: 0.78em;
+				color: #888;
+				}
+				.asset-holdings-row:last-child { border-bottom: none; }
+				.asset-market-header {
+				font-size: 0.65em; color: #444; text-transform: uppercase; letter-spacing: 1px;
+				display: grid;
+				grid-template-columns: 1.35fr 0.65fr 0.65fr 0.8fr 1fr 0.7fr auto auto;
+				gap: 0 10px;
+				padding-bottom: 6px;
+				border-bottom: 1px solid #1e1e1e;
+				margin-bottom: 2px;
+				}
+				.asset-market-row {
+				display: grid;
+				grid-template-columns: 1.35fr 0.65fr 0.65fr 0.8fr 1fr 0.7fr auto auto;
+				gap: 0 10px;
+				align-items: center;
+				padding: 7px 0;
+				border-bottom: 1px solid #1e1e1e;
+				font-size: 0.78em;
+				color: #888;
+				}
+				.asset-market-row:last-child { border-bottom: none; }
+				.asset-market-row .amount-input { width: 58px; }
+				canvas.row-spark {
+				width: 100%;
+				height: 28px;
+				display: block;
+				background: #101010;
+				border-radius: 2px;
+				}
+				.options-chain-wrap { overflow-x: auto; }
+				.options-chain-header,
+				.options-chain-row {
+				display: grid;
+				grid-template-columns: 1fr 52px 52px 90px 96px auto auto 66px auto auto 96px 90px 52px 52px 1fr;
+				gap: 0 8px;
+				align-items: center;
+				min-width: 900px;
+				}
+				.options-chain-header {
+				font-size: 0.65em; color: #444; text-transform: uppercase; letter-spacing: 1px;
+				padding-bottom: 6px; border-bottom: 1px solid #1e1e1e; margin-bottom: 2px;
+				}
+				.options-chain-row {
+				padding: 7px 0;
+				border-bottom: 1px solid #1e1e1e;
+				font-size: 0.78em;
+				color: #888;
+				}
+				.options-chain-row:last-child { border-bottom: none; }
+				.options-strike { color: #ffcc00; text-align: center; font-weight: bold; }
+				.options-chain-row .amount-input { width: 58px; }
+				.amount-stepper {
+				display: inline-flex;
+				gap: 4px;
+				align-items: center;
+				}
+				.amount-step-btn {
+				min-width: 30px;
+				padding: 4px 6px;
+				font-size: 0.75em;
+				}
+				#quick-strip {
+				border-top: 1px solid #2a2a2a;
+				background: #101010;
+				padding: 8px 12px;
+				display: grid;
+				grid-template-columns: minmax(180px, 1fr);
+				gap: 8px;
+				flex-shrink: 0;
+				}
+				.quick-card {
+				background: #141414;
+				border: 1px solid #222;
+				border-radius: 4px;
+				padding: 6px;
+				}
+				.quick-title {
+				font-size: 0.62em;
+				color: #666;
+				text-transform: uppercase;
+				letter-spacing: 1px;
+				margin-bottom: 5px;
+				}
+				canvas.quick-spark {
+				width: 100%;
+				height: 42px;
+				display: block;
+				background: #0f0f0f;
+				border-radius: 2px;
+				}
 			</style>
 		</head>
 	<body>
@@ -206,6 +322,13 @@
 				</div>
 
 				<div class="side-stat">
+					<div class="side-label">Job</div>
+					<div class="side-value white" id="s-job-title"></div>
+					<div class="side-label" style="margin-top:6px; font-size:0.75em;" id="s-job-pay"></div>
+					<div class="job-apply-btns" id="job-apply-btns"></div>
+				</div>
+
+				<div class="side-stat">
 					<div class="side-label">Cash</div>
 					<div class="side-value" id="s-cash"></div>
 				</div>
@@ -219,15 +342,22 @@
 					<div class="side-label">Net Worth</div>
 					<div class="side-value" id="s-networth"></div>
 				</div>
+				<div class="side-stat">
+					<div class="side-label">Total Income</div>
+					<div class="side-value white" id="s-income"></div>
+				</div>
+				<div class="side-stat">
+					<div class="side-label">Total Return</div>
+					<div class="side-value white" id="s-return"></div>
+				</div>
 
 				<hr class="side-divider">
 
 					<div class="side-actions">
-						<button class="btn work" id="work-btn">💼 Work (+$100)</button>
-						<button class="btn primary" id="next-btn">⏩ Next Day</button>
-						<button class="btn" id="autoplay-btn">▶ Auto</button>
+						<button class="btn primary work" id="day-btn">⏭ Next day</button>
+						<button class="btn" id="autoplay-btn">▶ Auto (Work)</button>
 						<div class="auto-row">
-							<label>ms / day</label>
+							<label>ms / tick</label>
 							<input id="auto-interval" class="amount-input" type="number" value="200" min="16" style="width:60px">
     </div>
 						<button class="btn" id="reset-btn">↺ New Run</button>
@@ -241,6 +371,8 @@
 				<button class="nav-tab" data-page="index-fund">📊 Index Fund</button>
 				<button class="nav-tab" data-page="bonds">💵 Bonds</button>
 				<button class="nav-tab" data-page="crypto">🪙 Crypto</button>
+				<button class="nav-tab" data-page="stocks">📈 Stocks</button>
+				<button class="nav-tab" data-page="options">🧩 Options</button>
 				<button class="nav-tab" data-page="debug">⚙ Debug</button>
 			</nav>
 
@@ -265,29 +397,28 @@
 					<div class="section">
 						<div class="stat-row">
 							<div class="stat-box">
-								<div class="stat-label">Price / share</div>
+								<div class="stat-label">Avg price / share</div>
 								<div class="stat-value">
 									$<span id="if-price"></span>
 								</div>
 							</div>
 							<div class="stat-box">
-								<div class="stat-label">Shares held</div>
+								<div class="stat-label">Total shares held</div>
 								<div class="stat-value" id="if-shares"></div>
 							</div>
 							<div class="stat-box">
-								<div class="stat-label">Day change</div>
+								<div class="stat-label">Avg day change</div>
 								<div id="if-change" class="inv-change">—</div>
 							</div>
 							<div class="stat-box">
-								<div class="stat-label">Value</div>
+								<div class="stat-label">Total value</div>
 								<div class="stat-value yellow" id="if-value"></div>
 							</div>
 						</div>
-						<div class="btn-row">
-							<input type="number" class="amount-input" id="if-amount" value="1" min="1">
-								<button class="btn" id="buy-btn">Buy</button>
-								<button class="btn danger" id="sell-btn">Sell</button>
-							</div>
+					</div>
+					<div class="section">
+						<div class="section-title">Funds Market</div>
+						<div id="if-market-list"></div>
 					</div>
 					<div class="section">
 						<div class="section-title">Recent — Daily</div>
@@ -309,6 +440,12 @@
 							</div>
 						</div>
 					</div>
+					<div class="section">
+						<div class="section-title">Holdings</div>
+						<div id="if-holdings-list">
+							<div style="color:#444;font-size:0.8em;">No index fund shares held.</div>
+						</div>
+					</div>
 				</div>
 
 				<!-- BONDS -->
@@ -317,6 +454,7 @@
 
 					<div class="section">
 						<div class="section-title">Yield Curve</div>
+						<p style="font-size:0.72em; color:#555; margin:-6px 0 10px 0;">Shifts daily (mean-reverting); new bonds price off the current curve.</p>
 						<canvas id="bonds-yield-curve" style="width:100%;height:120px;display:block;background:#111;border-radius:3px;"></canvas>
 						<div class="yield-labels" id="yield-labels"></div>
 					</div>
@@ -364,33 +502,120 @@
 					<div class="section">
 						<div class="stat-row">
 							<div class="stat-box">
-								<div class="stat-label">Price / coin</div>
+								<div class="stat-label">Avg price / coin</div>
 								<div class="stat-value">
 									$<span id="crypto-price"></span>
 								</div>
 							</div>
 							<div class="stat-box">
-								<div class="stat-label">Coins held</div>
+								<div class="stat-label">Total coins held</div>
 								<div class="stat-value" id="crypto-coins"></div>
 							</div>
 							<div class="stat-box">
-								<div class="stat-label">Day change</div>
+								<div class="stat-label">Avg day change</div>
 								<div id="crypto-change" class="inv-change">—</div>
 							</div>
 							<div class="stat-box">
-								<div class="stat-label">Value</div>
+								<div class="stat-label">Total value</div>
 								<div class="stat-value yellow" id="crypto-value"></div>
 							</div>
 						</div>
-						<div class="btn-row">
-							<input type="number" class="amount-input" id="crypto-amount" value="1" min="1">
-								<button class="btn" id="buy-crypto-btn">Buy</button>
-								<button class="btn danger" id="sell-crypto-btn">Sell</button>
-							</div>
+					</div>
+					<div class="section">
+						<div class="section-title">Crypto Market</div>
+						<div id="crypto-market-list"></div>
 					</div>
 					<div class="section">
 						<div class="section-title">Price History</div>
 						<canvas id="crypto-graph" class="spark"></canvas>
+					</div>
+					<div class="section">
+						<div class="section-title">Holdings</div>
+						<div id="crypto-holdings-list">
+							<div style="color:#444;font-size:0.8em;">No crypto holdings.</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- STOCKS -->
+				<div class="page" id="page-stocks">
+					<div class="page-title">Stocks</div>
+					<div class="section">
+						<div class="stat-row">
+							<div class="stat-box">
+								<div class="stat-label">Avg price / share</div>
+								<div class="stat-value">
+									$<span id="stock-price"></span>
+								</div>
+							</div>
+							<div class="stat-box">
+								<div class="stat-label">Total shares held</div>
+								<div class="stat-value" id="stock-shares"></div>
+							</div>
+							<div class="stat-box">
+								<div class="stat-label">Avg day change</div>
+								<div id="stock-change" class="inv-change">—</div>
+							</div>
+							<div class="stat-box">
+								<div class="stat-label">Total value</div>
+								<div class="stat-value yellow" id="stock-value"></div>
+							</div>
+						</div>
+					</div>
+					<div class="section">
+						<div class="section-title">Stock Market</div>
+						<div id="stock-market-list"></div>
+					</div>
+					<div class="section">
+						<div class="section-title">Price History</div>
+						<canvas id="stock-graph" class="spark"></canvas>
+					</div>
+					<div class="section">
+						<div class="section-title">Holdings</div>
+						<div id="stock-holdings-list">
+							<div style="color:#444;font-size:0.8em;">No stock holdings.</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- OPTIONS -->
+				<div class="page" id="page-options">
+					<div class="page-title">Options</div>
+					<div class="section">
+						<div class="stat-row">
+							<div class="stat-box">
+								<div class="stat-label">Avg price / contract</div>
+								<div class="stat-value">
+									$<span id="options-price"></span>
+								</div>
+							</div>
+							<div class="stat-box">
+								<div class="stat-label">Total contracts held</div>
+								<div class="stat-value" id="options-contracts"></div>
+							</div>
+							<div class="stat-box">
+								<div class="stat-label">Avg day change</div>
+								<div id="options-change" class="inv-change">—</div>
+							</div>
+							<div class="stat-box">
+								<div class="stat-label">Total value</div>
+								<div class="stat-value yellow" id="options-value"></div>
+							</div>
+						</div>
+					</div>
+					<div class="section">
+						<div class="section-title">Options Market</div>
+						<div id="options-market-list"></div>
+					</div>
+					<div class="section">
+						<div class="section-title">Price History</div>
+						<canvas id="options-graph" class="spark"></canvas>
+					</div>
+					<div class="section">
+						<div class="section-title">Holdings</div>
+						<div id="options-holdings-list">
+							<div style="color:#444;font-size:0.8em;">No options holdings.</div>
+						</div>
 					</div>
 				</div>
 
@@ -404,14 +629,14 @@
 						<div class="debug-grid">
 							<label>Starting Cash ($)</label>
 							<input class="amount-input" id="dbg-start-cash" type="number" value="10000" min="0" step="1000">
-								<label>Work Payout ($)</label>
-								<input class="amount-input" id="dbg-work-payout" type="number" value="100" min="1" step="10">
+								<label>Starting Job</label>
+								<select class="amount-input" id="dbg-start-job" style="width:100%; max-width:220px;"></select>
         </div>
 					</div>
 
 					<div class="section">
 						<div class="section-title">Daily Volatility</div>
-						<p style="font-size:0.72em; color:#444; margin-bottom:10px;">Standard deviation of daily price move. Real-world approx: index 1.26%, bonds 0.25%, crypto 4%.</p>
+						<p style="font-size:0.72em; color:#444; margin-bottom:10px;">Standard deviation of daily price move. Real-world approx: index 1.26%, bonds 0.25%, crypto 4%, options 7.5%.</p>
 						<div class="debug-grid">
 							<label>Index Fund (%)</label>
 							<input class="amount-input" id="dbg-vol-index" type="number" value="1.26" min="0.01" step="0.1">
@@ -419,6 +644,10 @@
 								<input class="amount-input" id="dbg-vol-bonds" type="number" value="0.25" min="0.01" step="0.05">
 									<label>Crypto (%)</label>
 									<input class="amount-input" id="dbg-vol-crypto" type="number" value="4.0" min="0.1" step="0.5">
+									<label>Stocks (%)</label>
+									<input class="amount-input" id="dbg-vol-stock" type="number" value="2.0" min="0.1" step="0.25">
+									<label>Options (%)</label>
+									<input class="amount-input" id="dbg-vol-options" type="number" value="7.5" min="0.1" step="0.5">
         </div>
 					</div>
 
@@ -446,20 +675,38 @@
 				</div>
 
 			</div>
+			<div id="quick-strip">
+				<div class="quick-card">
+					<div class="quick-title">Net Worth (Quick)</div>
+					<canvas id="quick-networth-graph" class="quick-spark"></canvas>
+				</div>
+			</div>
 		</div>
 
 		<script type="module">
-			import { newState, buy, sell, buyBond, sellBondEarly, buyCrypto, sellCrypto, nextDay, work, portfolioValue, netWorth, YIELD_CURVE, yieldForTerm } from "./game.js";
+			import { newState, buyIndexFund, sellIndexFund, buyBond, sellBondEarly, buyCrypto, sellCrypto, buyStock, sellStock, buyOption, sellOption, work, applyForJob, portfolioValue, netWorth, YIELD_CURVE, yieldForTerm, JOBS, jobUnlockedAtNetWorth } from "./game.js?v=jobs";
 
 			const fmt = n => "$" + Math.round(n).toLocaleString();
+
+			const dbgJobSelect = document.getElementById("dbg-start-job");
+			JOBS.forEach(j => {
+				const opt = document.createElement("option");
+				opt.value = j.id;
+				opt.textContent = j.minNetWorth <= 0
+					? `${j.title} ($${j.dailyPay}/day)`
+					: `${j.title} ($${j.dailyPay}/day) — ${fmt(j.minNetWorth)}+ NW`;
+				dbgJobSelect.appendChild(opt);
+			});
 
 			function readParams() {
 			return {
 			startCash:   parseFloat(document.getElementById("dbg-start-cash").value)   || 10000,
-			workPayout:  parseFloat(document.getElementById("dbg-work-payout").value)  || 100,
+			startJobId:  dbgJobSelect.value || "intern",
 			volIndex:    parseFloat(document.getElementById("dbg-vol-index").value)     / 100 || 0.0126,
 			volBonds:    parseFloat(document.getElementById("dbg-vol-bonds").value)     / 100 || 0.0025,
 			volCrypto:   parseFloat(document.getElementById("dbg-vol-crypto").value)    / 100 || 0.04,
+			volStock:    parseFloat(document.getElementById("dbg-vol-stock").value)     / 100 || 0.02,
+			volOptions:  parseFloat(document.getElementById("dbg-vol-options").value)   / 100 || 0.075,
 			coupon:      parseFloat(document.getElementById("dbg-coupon").value)        / 100 || 0.03,
 			eventFreq:   parseFloat(document.getElementById("dbg-event-freq").value)    || 365,
 			eventMin:    parseFloat(document.getElementById("dbg-event-min").value)     || 800,
@@ -471,6 +718,7 @@
 			let state = newState(params);
 			let autoplayInterval = null;
 			let renderedLogCount = 0;
+      const tradeQtyByInputId = {};
 
 			// Tab switching
 			document.querySelectorAll(".nav-tab").forEach(tab => {
@@ -491,8 +739,23 @@
     el.className = "inv-change " + (pct >= 0 ? "pos" : "neg");
   }
 
+  function averageHistory(assets, historyKey = "history") {
+    const list = assets || [];
+    if (!list.length) return [];
+    const lengths = list.map(a => (a[historyKey] || []).length).filter(Boolean);
+    if (!lengths.length) return [];
+    const len = Math.min(...lengths);
+    const out = [];
+    for (let i = 0; i < len; i++) {
+      const sum = list.reduce((acc, a) => acc + (a[historyKey][i] || 0), 0);
+      out.push(sum / list.length);
+    }
+    return out;
+  }
+
   function render(s) {
     const year = Math.floor((s.day - 1) / 365) + 1;
+    const tradingLocked = Boolean(autoplayInterval);
 
     // Sidebar
     document.getElementById("s-day").textContent       = s.day.toLocaleString();
@@ -501,25 +764,85 @@
     document.getElementById("s-day-fill").style.width  = (s.day / s.maxDays * 100) + "%";
     document.getElementById("s-cash").textContent      = fmt(s.cash);
     document.getElementById("s-portfolio").textContent = fmt(portfolioValue(s));
-    document.getElementById("s-networth").textContent  = fmt(netWorth(s));
-    document.getElementById("next-btn").disabled       = s.day >= s.maxDays;
-    document.getElementById("work-btn").disabled       = s.day >= s.maxDays;
+    const nw = netWorth(s);
+    const totalIncome = s.totalIncome || 0;
+    const totalReturn = nw - (s.startCash || 0) - totalIncome;
+    document.getElementById("s-networth").textContent  = fmt(nw);
+    document.getElementById("s-income").textContent    = fmt(totalIncome);
+    document.getElementById("s-return").textContent    = fmt(totalReturn);
+    const dayBtn = document.getElementById("day-btn");
+    dayBtn.disabled = s.day >= s.maxDays;
+    dayBtn.textContent = `⏭ Next day (+${fmt(s.job.dailyPay)})`;
+    document.getElementById("s-job-title").textContent = s.job.title;
+    document.getElementById("s-job-pay").textContent   = `${fmt(s.job.dailyPay)} when you advance a day`;
+
+    const jobBtns = document.getElementById("job-apply-btns");
+    jobBtns.innerHTML = "";
+    const nwNow = netWorth(s);
+    JOBS.forEach(j => {
+      if (j.id === s.job.id) return;
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn";
+      const unlocked = jobUnlockedAtNetWorth(j, nwNow);
+      b.disabled = !unlocked;
+      b.title = unlocked ? `Apply for ${j.title}` : `Requires net worth ${fmt(j.minNetWorth)}+`;
+      b.textContent = unlocked ? `Apply: ${j.title}` : `🔒 ${j.title} (${fmt(j.minNetWorth)}+)`;
+      b.onclick = () => { if (!b.disabled) { state = applyForJob(state, j.id); render(state); } };
+      jobBtns.appendChild(b);
+    });
 
     // Index Fund
-    document.getElementById("if-price").textContent  = s.indexFund.price.toFixed(2);
-    document.getElementById("if-shares").textContent = s.indexFund.shares;
-    document.getElementById("if-value").textContent  = fmt(s.indexFund.shares * s.indexFund.price);
-    setChange("if-change", s.indexFund.history);
+    const indexAvgHistory = averageHistory(s.indexFunds, "history");
+    const indexShares = (s.indexFunds || []).reduce((sum, a) => sum + (a.shares || 0), 0);
+    const indexValue = (s.indexFunds || []).reduce((sum, a) => sum + ((a.shares || 0) * (a.price || 0)), 0);
+    const indexAvgPrice = (s.indexFunds || []).length ? (s.indexFunds.reduce((sum, a) => sum + a.price, 0) / s.indexFunds.length) : 0;
+    document.getElementById("if-price").textContent  = indexAvgPrice.toFixed(2);
+    document.getElementById("if-shares").textContent = indexShares;
+    document.getElementById("if-value").textContent  = fmt(indexValue);
+    setChange("if-change", indexAvgHistory);
+    renderAssetMarket("if-market-list", s.indexFunds, "shares", "if", "share", tradingLocked);
 
-    // Bonds — yield curve preview
-    updateBondPreview();
+    // Bonds — yield curve preview (uses live curve from state)
+    updateBondPreview(s);
     renderBondHoldings(s);
+    renderAssetHoldings("if-holdings-list", s.indexFunds, "shares", "No index fund shares held.");
 
     // Crypto
-    document.getElementById("crypto-price").textContent = s.crypto.price.toFixed(2);
-    document.getElementById("crypto-coins").textContent  = s.crypto.coins;
-    document.getElementById("crypto-value").textContent  = fmt(s.crypto.coins * s.crypto.price);
-    setChange("crypto-change", s.crypto.history);
+    const cryptoAvgHistory = averageHistory(s.cryptos, "history");
+    const cryptoCoins = (s.cryptos || []).reduce((sum, a) => sum + (a.coins || 0), 0);
+    const cryptoValue = (s.cryptos || []).reduce((sum, a) => sum + ((a.coins || 0) * (a.price || 0)), 0);
+    const cryptoAvgPrice = (s.cryptos || []).length ? (s.cryptos.reduce((sum, a) => sum + a.price, 0) / s.cryptos.length) : 0;
+    document.getElementById("crypto-price").textContent = cryptoAvgPrice.toFixed(2);
+    document.getElementById("crypto-coins").textContent  = cryptoCoins;
+    document.getElementById("crypto-value").textContent  = fmt(cryptoValue);
+    setChange("crypto-change", cryptoAvgHistory);
+    renderAssetMarket("crypto-market-list", s.cryptos, "coins", "crypto", "coin", tradingLocked);
+    renderAssetHoldings("crypto-holdings-list", s.cryptos, "coins", "No crypto holdings.");
+
+    // Stocks
+    const stockAvgHistory = averageHistory(s.stocks, "history");
+    const stockShares = (s.stocks || []).reduce((sum, a) => sum + (a.shares || 0), 0);
+    const stockValue = (s.stocks || []).reduce((sum, a) => sum + ((a.shares || 0) * (a.price || 0)), 0);
+    const stockAvgPrice = (s.stocks || []).length ? (s.stocks.reduce((sum, a) => sum + a.price, 0) / s.stocks.length) : 0;
+    document.getElementById("stock-price").textContent = stockAvgPrice.toFixed(2);
+    document.getElementById("stock-shares").textContent = stockShares;
+    document.getElementById("stock-value").textContent = fmt(stockValue);
+    setChange("stock-change", stockAvgHistory);
+    renderAssetMarket("stock-market-list", s.stocks, "shares", "stock", "share", tradingLocked);
+    renderAssetHoldings("stock-holdings-list", s.stocks, "shares", "No stock holdings.");
+
+    // Options
+    const optionsAvgHistory = averageHistory(s.options, "history");
+    const optionsContracts = (s.options || []).reduce((sum, a) => sum + (a.contracts || 0), 0);
+    const optionsValue = (s.options || []).reduce((sum, a) => sum + ((a.contracts || 0) * (a.price || 0)), 0);
+    const optionsAvgPrice = (s.options || []).length ? (s.options.reduce((sum, a) => sum + a.price, 0) / s.options.length) : 0;
+    document.getElementById("options-price").textContent = optionsAvgPrice.toFixed(2);
+    document.getElementById("options-contracts").textContent = optionsContracts;
+    document.getElementById("options-value").textContent = fmt(optionsValue);
+    setChange("options-change", optionsAvgHistory);
+    renderOptionsChain(s.options, tradingLocked);
+    renderAssetHoldings("options-holdings-list", s.options, "contracts", "No options holdings.");
 
     // Log — only append new entries
     const logEl = document.getElementById("log");
@@ -535,7 +858,7 @@
     renderGraphs(s);
   }
 
-  function drawChart(canvas, data, color, yAxisEl, xAxisEl, xLabels) {
+  function drawChart(canvas, data, color, yAxisEl, xAxisEl, xLabels, showInlineYLabels = false) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
@@ -573,6 +896,17 @@
     ctx.lineWidth = 2;
     ctx.stroke();
 
+    // Inline y labels for sparkline-like charts
+    if (showInlineYLabels || !yAxisEl) {
+      const fmtCompact = v => v >= 1000 ? (v / 1000).toFixed(1) + "k" : v.toFixed(0);
+      ctx.fillStyle = "#666";
+      ctx.font = "9px monospace";
+      ctx.textAlign = "right";
+      ctx.fillText(fmtCompact(max), Math.max(16, w - 2), 10);
+      ctx.fillText(fmtCompact(min), Math.max(16, w - 2), h - 3);
+      ctx.textAlign = "left";
+    }
+
     // Y axis labels
     if (yAxisEl) {
       const fmtPrice = v => v >= 1000 ? "$" + (v/1000).toFixed(1) + "k" : "$" + v.toFixed(0);
@@ -588,7 +922,7 @@
 			}
 			}
 
-			function drawYieldCurve() {
+			function drawYieldCurve(s) {
 			const canvas = document.getElementById("bonds-yield-curve");
 			if (!canvas) return;
 			const ctx = canvas.getContext("2d");
@@ -601,14 +935,15 @@
 			ctx.scale(dpr, dpr);
 			ctx.clearRect(0, 0, w, h);
 
-			const yields = YIELD_CURVE.map(p => p.yield);
+			const curve = (s && s.yieldCurve && s.yieldCurve.length) ? s.yieldCurve : YIELD_CURVE;
+			const yields = curve.map(p => p.yield);
 			const minY = Math.min(...yields) * 0.8;
 			const maxY = Math.max(...yields) * 1.1;
-			const range = maxY - minY;
+			const range = Math.max(1e-6, maxY - minY);
 			const pad = { t: 8, b: 8, l: 4, r: 4 };
 			const pw = w - pad.l - pad.r;
 			const ph = h - pad.t - pad.b;
-			const maxTerm = YIELD_CURVE[YIELD_CURVE.length - 1].term;
+			const maxTerm = curve[curve.length - 1].term;
 
 			// Gridlines
 			ctx.strokeStyle = "#1e1e1e";
@@ -620,7 +955,7 @@
 
 			// Curve
 			ctx.beginPath();
-			YIELD_CURVE.forEach((p, i) => {
+			curve.forEach((p, i) => {
 			const x = pad.l + (p.term / maxTerm) * pw;
 			const y = pad.t + ph - ((p.yield - minY) / range) * ph;
 			i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
@@ -630,7 +965,7 @@
 			ctx.stroke();
 
 			// Dots + yield labels on canvas
-			YIELD_CURVE.forEach(p => {
+			curve.forEach(p => {
 			const x = pad.l + (p.term / maxTerm) * pw;
 			const y = pad.t + ph - ((p.yield - minY) / range) * ph;
 			ctx.beginPath();
@@ -645,17 +980,17 @@
 			// X axis labels via DOM
 			const labelsEl = document.getElementById("yield-labels");
 			if (labelsEl) {
-			labelsEl.innerHTML = YIELD_CURVE.map(p => `<span>${p.term}yr</span>`).join("");
+			labelsEl.innerHTML = curve.map(p => `<span>${p.term}yr</span>`).join("");
 			}
 			}
 
-			function updateBondPreview() {
+			function updateBondPreview(s) {
 			const termEl = document.getElementById("bond-term");
 			const faceEl = document.getElementById("bond-face-value");
 			if (!termEl || !faceEl) return;
 			const term = parseInt(termEl.value);
 			const face = parseFloat(faceEl.value) || 0;
-			const y = yieldForTerm(term);
+			const y = yieldForTerm(s, term);
 			const yieldEl = document.getElementById("bond-preview-yield");
 			const incomeEl = document.getElementById("bond-preview-income");
 			if (yieldEl) yieldEl.textContent = (y * 100).toFixed(2) + "%";
@@ -699,10 +1034,191 @@
 			`;
 			}
 
+			function renderAssetHoldings(listElId, assets, qtyKey, emptyText) {
+			const el = document.getElementById(listElId);
+			if (!el) return;
+			const holdings = (assets || []).filter(a => (a[qtyKey] || 0) > 0);
+			if (!holdings.length) {
+			el.innerHTML = `<div style="color:#444;font-size:0.8em;">${emptyText}</div>`;
+			return;
+			}
+			el.innerHTML = `
+			<div class="asset-holdings-header">
+				<span>Asset</span>
+				<span>Qty</span>
+				<span>Price</span>
+				<span>Value</span>
+			</div>
+			${holdings.map(a => `
+			<div class="asset-holdings-row">
+				<span class="white">${a.name}</span>
+				<span>${a[qtyKey]}</span>
+				<span>$${a.price.toFixed(2)}</span>
+				<span class="yellow">${fmt(a[qtyKey] * a.price)}</span>
+			</div>`).join("")}
+			`;
+			}
+
+			function renderAssetMarket(listElId, assets, qtyKey, prefix, unitLabel, isTradeLocked = false) {
+			const el = document.getElementById(listElId);
+			if (!el) return;
+			const list = assets || [];
+			if (!list.length) {
+			el.innerHTML = `<div style="color:#444;font-size:0.8em;">No assets available.</div>`;
+			return;
+			}
+			el.innerHTML = `
+			<div class="asset-market-header">
+				<span>Asset</span>
+				<span>Price</span>
+				<span>Held</span>
+				<span>Value</span>
+				<span>Trend</span>
+				<span>Qty</span>
+				<span></span>
+				<span></span>
+			</div>
+			${list.map(a => {
+				const amountId = `${prefix}-amount-${a.id}`;
+        const qty = Math.max(1, tradeQtyByInputId[amountId] || 1);
+        const sparkId = `${prefix}-spark-${a.id}`;
+				return `
+				<div class="asset-market-row">
+					<span class="white">${a.name}</span>
+					<span>$${a.price.toFixed(2)}</span>
+					<span>${a[qtyKey]}</span>
+					<span class="yellow">${fmt(a[qtyKey] * a.price)}</span>
+					<canvas id="${sparkId}" class="row-spark"></canvas>
+					<div class="amount-stepper">
+						<button class="btn amount-step-btn" onclick="window._bumpAmount('${amountId}', -5)">-5</button>
+						<input id="${amountId}" class="amount-input" type="number" min="1" value="${qty}" oninput="window._setAmount('${amountId}', this.value)">
+						<button class="btn amount-step-btn" onclick="window._bumpAmount('${amountId}', 5)">+5</button>
+					</div>
+					<button class="btn" onclick="window._tradeAsset('${prefix}','buy','${a.id}')" ${isTradeLocked ? 'title="Auto will stop on buy."' : ""}>Buy</button>
+					<button class="btn danger" onclick="window._tradeAsset('${prefix}','sell','${a.id}')">Sell</button>
+				</div>`;
+			}).join("")}
+			`;
+      list.forEach(a => {
+        const sparkId = `${prefix}-spark-${a.id}`;
+        drawChart(document.getElementById(sparkId), a.history || [], "#66aaff", null, null, null, true);
+      });
+			}
+
+			function renderOptionsChain(options, isTradeLocked = false) {
+			const el = document.getElementById("options-market-list");
+			if (!el) return;
+			const list = options || [];
+			if (!list.length) {
+			el.innerHTML = `<div style="color:#444;font-size:0.8em;">No options available.</div>`;
+			return;
+			}
+      const grouped = {};
+      list.forEach(opt => {
+        const key = `${opt.underlyingId}-${opt.strike}`;
+        if (!grouped[key]) grouped[key] = { strike: opt.strike, put: null, call: null };
+        if (opt.optionType === "put") grouped[key].put = opt;
+        if (opt.optionType === "call") grouped[key].call = opt;
+      });
+      const rows = Object.values(grouped).sort((a, b) => a.strike - b.strike);
+
+      const sideCell = (opt, side) => {
+        if (!opt) {
+          return `<span style="color:#333;">—</span><span style="color:#333;">—</span><span style="color:#333;">—</span><span style="color:#333;">—</span><span style="color:#333;">—</span><span></span><span></span>`;
+        }
+        const qtyKey = "contracts";
+        const amountId = `options-amount-${opt.id}`;
+        const sparkId = `options-spark-${opt.id}`;
+        const qty = Math.max(1, tradeQtyByInputId[amountId] || 1);
+        const name = opt.name.replace("SPY ", "");
+        if (side === "put") {
+          return `
+            <span class="white">${name}</span>
+            <span>$${opt.price.toFixed(2)}</span>
+            <span>${opt[qtyKey]}</span>
+            <canvas id="${sparkId}" class="row-spark"></canvas>
+            <div class="amount-stepper">
+              <button class="btn amount-step-btn" onclick="window._bumpAmount('${amountId}', -5)">-5</button>
+              <input id="${amountId}" class="amount-input" type="number" min="1" value="${qty}" oninput="window._setAmount('${amountId}', this.value)">
+              <button class="btn amount-step-btn" onclick="window._bumpAmount('${amountId}', 5)">+5</button>
+            </div>
+            <button class="btn" onclick="window._tradeAsset('options','buy','${opt.id}')" ${isTradeLocked ? 'title="Auto will stop on buy."' : ""}>Buy</button>
+            <button class="btn danger" onclick="window._tradeAsset('options','sell','${opt.id}')">Sell</button>`;
+        }
+        return `
+          <button class="btn danger" onclick="window._tradeAsset('options','sell','${opt.id}')">Sell</button>
+          <button class="btn" onclick="window._tradeAsset('options','buy','${opt.id}')" ${isTradeLocked ? 'title="Auto will stop on buy."' : ""}>Buy</button>
+          <div class="amount-stepper">
+            <button class="btn amount-step-btn" onclick="window._bumpAmount('${amountId}', -5)">-5</button>
+            <input id="${amountId}" class="amount-input" type="number" min="1" value="${qty}" oninput="window._setAmount('${amountId}', this.value)">
+            <button class="btn amount-step-btn" onclick="window._bumpAmount('${amountId}', 5)">+5</button>
+          </div>
+          <canvas id="${sparkId}" class="row-spark"></canvas>
+          <span>${opt[qtyKey]}</span>
+          <span>$${opt.price.toFixed(2)}</span>
+          <span class="white">${name}</span>`;
+      };
+
+			el.innerHTML = `
+      <div class="options-chain-wrap">
+        <div class="options-chain-header">
+          <span>Put</span><span>Price</span><span>Held</span><span>Trend</span><span>Qty</span><span></span><span></span>
+          <span class="options-strike">Strike</span>
+          <span></span><span></span><span>Qty</span><span>Trend</span><span>Held</span><span>Price</span><span>Call</span>
+        </div>
+        ${rows.map(r => `
+          <div class="options-chain-row">
+            ${sideCell(r.put, "put")}
+            <span class="options-strike">${r.strike}</span>
+            ${sideCell(r.call, "call")}
+          </div>
+        `).join("")}
+      </div>`;
+
+      list.forEach(opt => {
+        const sparkId = `options-spark-${opt.id}`;
+        drawChart(document.getElementById(sparkId), opt.history || [], "#ffaa33", null, null, null, true);
+      });
+			}
+
 			// Expose sell handler to DOM (bonds page uses onclick)
 			window._sellBond = (id) => {
 			state = sellBondEarly(state, id);
 			render(state);
+			};
+
+			window._tradeAsset = (prefix, mode, id) => {
+      if (mode === "buy" && autoplayInterval) {
+        stopAuto();
+      }
+			const amountId = `${prefix}-amount-${id}`;
+			const qtyEl = document.getElementById(amountId);
+			const qty = Math.max(1, parseInt(qtyEl?.value) || 1);
+      tradeQtyByInputId[amountId] = qty;
+			if (prefix === "if") {
+				state = mode === "buy" ? buyIndexFund(state, id, qty) : sellIndexFund(state, id, qty);
+			} else if (prefix === "crypto") {
+				state = mode === "buy" ? buyCrypto(state, id, qty) : sellCrypto(state, id, qty);
+			} else if (prefix === "stock") {
+				state = mode === "buy" ? buyStock(state, id, qty) : sellStock(state, id, qty);
+			} else if (prefix === "options") {
+				state = mode === "buy" ? buyOption(state, id, qty) : sellOption(state, id, qty);
+			}
+			render(state);
+			};
+
+			window._setAmount = (id, rawValue) => {
+			const qty = Math.max(1, parseInt(rawValue) || 1);
+      tradeQtyByInputId[id] = qty;
+			};
+
+			window._bumpAmount = (id, delta) => {
+			const el = document.getElementById(id);
+			if (!el) return;
+			const current = parseInt(el.value) || 1;
+      const next = Math.max(1, current + delta);
+			el.value = next;
+      tradeQtyByInputId[id] = next;
 			};
 
 			function dailyXLabels(history, currentDay) {
@@ -722,31 +1238,37 @@
 			}
 
 			function renderGraphs(s) {
-			const monthly = s.indexFund.monthlyHistory || [];
-			const dxLabels = dailyXLabels(s.indexFund.history, s.day);
+			const indexHistory = averageHistory(s.indexFunds, "history");
+			const cryptoHistory = averageHistory(s.cryptos, "history");
+			const stockHistory = averageHistory(s.stocks, "history");
+			const optionsHistory = averageHistory(s.options, "history");
+			const monthly = averageHistory(s.indexFunds, "monthlyHistory");
+			const dxLabels = dailyXLabels(indexHistory, s.day);
 			const mxLabels = monthlyXLabels(monthly, s.day);
 
 			drawChart(
-			document.getElementById("price-graph"), s.indexFund.history, "#00ff88",
+			document.getElementById("price-graph"), indexHistory, "#00ff88",
 			document.getElementById("if-daily-yaxis"), document.getElementById("if-daily-xaxis"), dxLabels
 			);
 			drawChart(
 			document.getElementById("price-graph-monthly"), monthly, "#00ff88",
 			document.getElementById("if-monthly-yaxis"), document.getElementById("if-monthly-xaxis"), mxLabels
 			);
-			drawChart(document.getElementById("crypto-graph"),   s.crypto.history,    "#ff66cc", null, null, null);
+			drawChart(document.getElementById("crypto-graph"),   cryptoHistory,    "#ff66cc", null, null, null);
+			drawChart(document.getElementById("stock-graph"),    stockHistory,   "#66aaff", null, null, null);
+			drawChart(document.getElementById("options-graph"),  optionsHistory, "#ffaa33", null, null, null);
 			drawChart(document.getElementById("networth-graph"), s.netWorthHistory,   "#ffcc00", null, null, null);
-			drawYieldCurve();
+			drawChart(document.getElementById("quick-networth-graph"), s.netWorthHistory, "#ffcc00", null, null, null);
+			drawYieldCurve(s);
 			}
-
-			const getQty = id => parseInt(document.getElementById(id).value) || 1;
 
 			function startAuto() {
 			if (autoplayInterval) clearInterval(autoplayInterval);
 			const ms = Math.max(16, parseInt(document.getElementById("auto-interval").value) || 200);
-			document.getElementById("autoplay-btn").textContent = "⏸ Stop";
+			document.getElementById("autoplay-btn").textContent = "⏸ Stop (Work)";
+      render(state);
 			autoplayInterval = setInterval(() => {
-			state = nextDay(state, params);
+			state = work(state, params);
 			render(state);
 			if (state.day >= state.maxDays) stopAuto();
 			}, ms);
@@ -755,27 +1277,23 @@
 			function stopAuto() {
 			clearInterval(autoplayInterval);
 			autoplayInterval = null;
-			document.getElementById("autoplay-btn").textContent = "▶ Auto";
+			document.getElementById("autoplay-btn").textContent = "▶ Auto (Work)";
+      render(state);
 			}
 
-			document.getElementById("work-btn").onclick        = () => { state = work(state, params);                              render(state); };
-			document.getElementById("next-btn").onclick        = () => { state = nextDay(state, params);                            render(state); };
-			document.getElementById("buy-btn").onclick         = () => { state = buy(state, getQty("if-amount"));                   render(state); };
-			document.getElementById("sell-btn").onclick        = () => { state = sell(state, getQty("if-amount"));                  render(state); };
+			document.getElementById("day-btn").onclick         = () => { state = work(state, params); render(state); };
 			document.getElementById("buy-bonds-btn").onclick   = () => {
+			if (autoplayInterval) stopAuto();
 			const face = parseFloat(document.getElementById("bond-face-value").value) || 1000;
 			const term = parseInt(document.getElementById("bond-term").value) || 5;
 			state = buyBond(state, face, term);
 			render(state);
 			};
-			document.getElementById("buy-crypto-btn").onclick  = () => { state = buyCrypto(state, getQty("crypto-amount"));         render(state); };
-			document.getElementById("sell-crypto-btn").onclick = () => { state = sellCrypto(state, getQty("crypto-amount"));        render(state); };
 			document.getElementById("autoplay-btn").onclick    = () => { autoplayInterval ? stopAuto() : startAuto(); };
 
 			// Bond preview updates live
-			document.getElementById("bond-term").addEventListener("change", updateBondPreview);
-			document.getElementById("bond-face-value").addEventListener("input", updateBondPreview);
-			document.getElementById("autoplay-btn").onclick    = () => { autoplayInterval ? stopAuto() : startAuto(); };
+			document.getElementById("bond-term").addEventListener("change", () => updateBondPreview(state));
+			document.getElementById("bond-face-value").addEventListener("input", () => updateBondPreview(state));
 			document.getElementById("reset-btn").onclick       = () => {
 			stopAuto();
 			state = { ...newState(params), log: [{ msg: "New run started.", type: "info", day: 1 }] };
