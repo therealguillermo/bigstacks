@@ -69,8 +69,8 @@ export function evolveOptions(state, params, updatedIndexFunds) {
   });
 }
 
-// Pure price update for a single contract — exported so it can be unit-tested.
-function priceOption(option, underlyingPrev, underlyingNext, strike, dailyVol) {
+// Pure price update for a single contract (exported for tests and newState prefill).
+export function priceOption(option, underlyingPrev, underlyingNext, strike, dailyVol) {
   const direction = option.direction ?? (option.optionType === "put" ? -1 : 1);
 
   const intrinsic = option.optionType === "put"

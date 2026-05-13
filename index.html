@@ -954,7 +954,9 @@
 			document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
 			tab.classList.add("active");
 			document.getElementById("page-" + tab.dataset.page).classList.add("active");
-			renderGraphs(state);
+			// Full render so canvases on the now-visible tab get non-zero layout
+			// (hidden pages are display:none → sparklines were skipped on first paint).
+			render(state);
 			});
 			});
 
